@@ -1,0 +1,3574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Workout Tracker</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet" />
+<style>
+  body { margin: 0; }
+  @import url('https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Caveat:wght@500;700&family=Patrick+Hand&family=Kalam:wght@400;700&display=swap');
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" data-presets="react">
+
+const { useState, useEffect, useCallback, useRef, useMemo } = React;
+
+function makeIcon(paths) {
+  return function Icon({ size = 16, color = "currentColor", style, className, ...rest }) {
+    return (
+      <svg
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        style={style}
+        className={className}
+        {...rest}
+      >
+        {paths}
+      </svg>
+    );
+  };
+}
+
+const Plus = makeIcon(<><path d="M12 5v14M5 12h14" /></>);
+const Trash2 = makeIcon(<><path d="M3 6h18" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6" /><path d="M14 11v6" /><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" /></>);
+const Edit2 = makeIcon(<><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" /></>);
+const ChevronDown = makeIcon(<path d="M6 9l6 6 6-6" />);
+const ChevronRight = makeIcon(<path d="M9 18l6-6-6-6" />);
+const ChevronLeft = makeIcon(<path d="M15 18l-6-6 6-6" />);
+const Dumbbell = makeIcon(<><path d="M6.5 6.5l11 11" /><path d="M21 21l-1-1" /><path d="M3 3l1 1" /><path d="M18 13l3-3-1.5-1.5L17 11Z" /><path d="M6 18l3-3-1.5-1.5L4.5 16.5Z" /><path d="M15 6l-1.5 1.5L16 10l3-3Z" /><path d="M9 18l-3-3-1.5 1.5L8 20Z" /></>);
+const LayoutGrid = makeIcon(<><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></>);
+const ClipboardList = makeIcon(<><rect x="6" y="3" width="12" height="18" rx="2" /><path d="M9 3v2h6V3" /><path d="M9 9h6" /><path d="M9 13h6" /><path d="M9 17h4" /></>);
+const TrendingUp = makeIcon(<><path d="M3 17l6-6 4 4 8-8" /><path d="M15 7h6v6" /></>);
+const CalendarIcon = makeIcon(<><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></>);
+const X = makeIcon(<><path d="M18 6L6 18M6 6l12 12" /></>);
+const Check = makeIcon(<path d="M20 6L9 17l-5-5" />);
+const Save = makeIcon(<><path d="M5 4h11l3 3v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z" /><path d="M8 4v5h8V4" /><path d="M8 13h8v7H8z" /></>);
+const AlertTriangle = makeIcon(<><path d="M10.3 3.9a2 2 0 0 1 3.4 0l8 14A2 2 0 0 1 20 21H4a2 2 0 0 1-1.7-3Z" /><path d="M12 9v4" /><path d="M12 17h.01" /></>);
+const Sparkles = makeIcon(<><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5Z" /><path d="M19 16l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7Z" /></>);
+const Copy = makeIcon(<><rect x="9" y="9" width="12" height="12" rx="2" /><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1" /></>);
+const StickyNote = makeIcon(<><path d="M4 4h16v11l-5 5H4Z" /><path d="M15 20v-4a1 1 0 0 1 1-1h4" /></>);
+const Trophy = makeIcon(<><path d="M8 21h8" /><path d="M12 17v4" /><path d="M7 4h10v5a5 5 0 0 1-10 0Z" /><path d="M5 5H4a2 2 0 0 0 2 4" /><path d="M19 5h1a2 2 0 0 1-2 4" /></>);
+const Flame = makeIcon(<path d="M12 2c2 4-3 5-3 9a3 3 0 0 0 6 0c0-1-0.5-2-1-2.5 1.5 0 3 2 3 5a5 5 0 0 1-10 0c0-5 5-6 5-11.5Z" />);
+const Medal = makeIcon(<><circle cx="12" cy="15" r="6" /><path d="M9 9.5L6 3h4l2 4.5" /><path d="M15 9.5L18 3h-4l-2 4.5" /></>);
+const Star = makeIcon(<path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7Z" />);
+const Award = makeIcon(<><circle cx="12" cy="8" r="6" /><path d="M9 13.5L7 22l5-3 5 3-2-8.5" /></>);
+
+const uid = () => Math.random().toString(36).slice(2, 10);
+
+const MUSCLE_GROUPS = ["Chest", "Back", "Shoulders", "Quads", "Hamstrings", "Glutes", "Calves", "Biceps", "Triceps", "Forearms", "Core", "Traps"];
+const EQUIPMENT = ["Barbell", "Dumbbell", "Machine", "Cable", "Bodyweight", "Bands", "Kettlebell", "Other"];
+const EX_TYPES = ["Compound", "Isolation"];
+const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+const QUOTES = [
+  "The pain you feel today is the strength you feel tomorrow.",
+  "Discipline is choosing between what you want now and what you want most.",
+  "Strength doesn't come from what you can do — it comes from overcoming what you once couldn't.",
+  "Every rep is a vote for the person you're becoming.",
+  "Iron doesn't lie. It tells you exactly where you stand.",
+  "Progress is a whisper before it's a shout. Log it anyway.",
+  "Small weights, added consistently, become heavy legacies.",
+  "You don't find willpower. You build it, one set at a time.",
+];
+
+function randomQuote(seed) {
+  return QUOTES[seed % QUOTES.length];
+}
+
+const TM_LIFTS = [
+  { key: "squat", label: "Squat", defaultName: "Barbell Back Squat", isLower: true },
+  { key: "bench", label: "Bench", defaultName: "Barbell Bench Press", isLower: false },
+  { key: "deadlift", label: "Deadlift", defaultName: "Conventional Deadlift", isLower: true },
+  { key: "ohp", label: "OHP", defaultName: "Overhead Press", isLower: false },
+];
+
+const FIVE31_WEEKS = [
+  { label: "Week 1 (5s)", pcts: [65, 75, 85], reps: ["5", "5", "5+"] },
+  { label: "Week 2 (3s)", pcts: [70, 80, 90], reps: ["3", "3", "3+"] },
+  { label: "Week 3 (5/3/1)", pcts: [75, 85, 95], reps: ["5", "3", "1+"] },
+  { label: "Week 4 (Deload)", pcts: [40, 50, 60], reps: ["5", "5", "5"] },
+];
+
+/* ===================== EXERCISE LIBRARY ===================== */
+
+function ex(name, muscle, equipment, type, isMain = false) {
+  return { id: uid(), name, muscle, equipment, type, isMain };
+}
+
+const SEED_EXERCISES = [
+  ex("Barbell Bench Press", "Chest", "Barbell", "Compound", true),
+  ex("Incline Barbell Bench Press", "Chest", "Barbell", "Compound"),
+  ex("Decline Barbell Bench Press", "Chest", "Barbell", "Compound"),
+  ex("Dumbbell Bench Press", "Chest", "Dumbbell", "Compound"),
+  ex("Incline Dumbbell Press", "Chest", "Dumbbell", "Compound"),
+  ex("Dumbbell Flye", "Chest", "Dumbbell", "Isolation"),
+  ex("Cable Flye", "Chest", "Cable", "Isolation"),
+  ex("Pec Deck Machine", "Chest", "Machine", "Isolation"),
+  ex("Chest Press Machine", "Chest", "Machine", "Compound"),
+  ex("Push-Up", "Chest", "Bodyweight", "Compound"),
+  ex("Dips", "Chest", "Bodyweight", "Compound"),
+  ex("Conventional Deadlift", "Back", "Barbell", "Compound", true),
+  ex("Sumo Deadlift", "Back", "Barbell", "Compound"),
+  ex("Barbell Row", "Back", "Barbell", "Compound"),
+  ex("Pendlay Row", "Back", "Barbell", "Compound"),
+  ex("T-Bar Row", "Back", "Barbell", "Compound"),
+  ex("Dumbbell Row", "Back", "Dumbbell", "Compound"),
+  ex("Lat Pulldown", "Back", "Cable", "Compound"),
+  ex("Seated Cable Row", "Back", "Cable", "Compound"),
+  ex("Pull-Up", "Back", "Bodyweight", "Compound"),
+  ex("Chin-Up", "Back", "Bodyweight", "Compound"),
+  ex("Straight-Arm Pulldown", "Back", "Cable", "Isolation"),
+  ex("Chest-Supported Row Machine", "Back", "Machine", "Compound"),
+  ex("Rack Pull", "Back", "Barbell", "Compound"),
+  ex("Overhead Press", "Shoulders", "Barbell", "Compound", true),
+  ex("Seated Dumbbell Press", "Shoulders", "Dumbbell", "Compound"),
+  ex("Arnold Press", "Shoulders", "Dumbbell", "Compound"),
+  ex("Lateral Raise", "Shoulders", "Dumbbell", "Isolation"),
+  ex("Cable Lateral Raise", "Shoulders", "Cable", "Isolation"),
+  ex("Front Raise", "Shoulders", "Dumbbell", "Isolation"),
+  ex("Rear Delt Flye", "Shoulders", "Dumbbell", "Isolation"),
+  ex("Face Pull", "Shoulders", "Cable", "Isolation"),
+  ex("Machine Shoulder Press", "Shoulders", "Machine", "Compound"),
+  ex("Upright Row", "Shoulders", "Barbell", "Compound"),
+  ex("Barbell Back Squat", "Quads", "Barbell", "Compound", true),
+  ex("Front Squat", "Quads", "Barbell", "Compound"),
+  ex("Box Squat", "Quads", "Barbell", "Compound"),
+  ex("Leg Press", "Quads", "Machine", "Compound"),
+  ex("Hack Squat", "Quads", "Machine", "Compound"),
+  ex("Bulgarian Split Squat", "Quads", "Dumbbell", "Compound"),
+  ex("Walking Lunge", "Quads", "Dumbbell", "Compound"),
+  ex("Leg Extension", "Quads", "Machine", "Isolation"),
+  ex("Goblet Squat", "Quads", "Kettlebell", "Compound"),
+  ex("Romanian Deadlift", "Hamstrings", "Barbell", "Compound"),
+  ex("Stiff-Leg Deadlift", "Hamstrings", "Barbell", "Compound"),
+  ex("Leg Curl (Lying)", "Hamstrings", "Machine", "Isolation"),
+  ex("Leg Curl (Seated)", "Hamstrings", "Machine", "Isolation"),
+  ex("Good Morning", "Hamstrings", "Barbell", "Compound"),
+  ex("Glute Ham Raise", "Hamstrings", "Bodyweight", "Compound"),
+  ex("Nordic Curl", "Hamstrings", "Bodyweight", "Isolation"),
+  ex("Hip Thrust", "Glutes", "Barbell", "Compound"),
+  ex("Glute Bridge", "Glutes", "Barbell", "Compound"),
+  ex("Cable Kickback", "Glutes", "Cable", "Isolation"),
+  ex("Glute Machine Kickback", "Glutes", "Machine", "Isolation"),
+  ex("Sumo Squat", "Glutes", "Dumbbell", "Compound"),
+  ex("Standing Calf Raise", "Calves", "Machine", "Isolation"),
+  ex("Seated Calf Raise", "Calves", "Machine", "Isolation"),
+  ex("Leg Press Calf Raise", "Calves", "Machine", "Isolation"),
+  ex("Donkey Calf Raise", "Calves", "Bodyweight", "Isolation"),
+  ex("Barbell Curl", "Biceps", "Barbell", "Isolation"),
+  ex("EZ-Bar Curl", "Biceps", "Barbell", "Isolation"),
+  ex("Dumbbell Curl", "Biceps", "Dumbbell", "Isolation"),
+  ex("Hammer Curl", "Biceps", "Dumbbell", "Isolation"),
+  ex("Incline Dumbbell Curl", "Biceps", "Dumbbell", "Isolation"),
+  ex("Cable Curl", "Biceps", "Cable", "Isolation"),
+  ex("Preacher Curl", "Biceps", "Barbell", "Isolation"),
+  ex("Concentration Curl", "Biceps", "Dumbbell", "Isolation"),
+  ex("Triceps Pushdown", "Triceps", "Cable", "Isolation"),
+  ex("Overhead Triceps Extension", "Triceps", "Dumbbell", "Isolation"),
+  ex("Skull Crusher", "Triceps", "Barbell", "Isolation"),
+  ex("Close-Grip Bench Press", "Triceps", "Barbell", "Compound"),
+  ex("Rope Pushdown", "Triceps", "Cable", "Isolation"),
+  ex("Dumbbell Kickback", "Triceps", "Dumbbell", "Isolation"),
+  ex("Bench Dip", "Triceps", "Bodyweight", "Isolation"),
+  ex("Wrist Curl", "Forearms", "Barbell", "Isolation"),
+  ex("Reverse Wrist Curl", "Forearms", "Barbell", "Isolation"),
+  ex("Farmer's Carry", "Forearms", "Dumbbell", "Compound"),
+  ex("Plate Pinch", "Forearms", "Other", "Isolation"),
+  ex("Hanging Leg Raise", "Core", "Bodyweight", "Isolation"),
+  ex("Plank", "Core", "Bodyweight", "Isolation"),
+  ex("Cable Crunch", "Core", "Cable", "Isolation"),
+  ex("Ab Wheel Rollout", "Core", "Other", "Isolation"),
+  ex("Weighted Sit-Up", "Core", "Bodyweight", "Isolation"),
+  ex("Russian Twist", "Core", "Bodyweight", "Isolation"),
+  ex("Side Plank", "Core", "Bodyweight", "Isolation"),
+  ex("Barbell Shrug", "Traps", "Barbell", "Isolation"),
+  ex("Dumbbell Shrug", "Traps", "Dumbbell", "Isolation"),
+  ex("Trap Bar Deadlift", "Traps", "Barbell", "Compound"),
+];
+
+function findExId(exercises, name) {
+  const found = exercises.find((e) => e.name === name);
+  return found ? found.id : exercises[0]?.id || "";
+}
+
+function blankRow(exercises) {
+  return { exerciseId: exercises[0]?.id || "", mode: "plain", sets: 3, repRange: "8-10", targetRpe: "", targetWeight: "", tmLift: "squat" };
+}
+
+/* ===================== BUILT-IN PROGRAM SKELETONS ===================== */
+
+function quickStart531(exercises, tms) {
+  const templates = TM_LIFTS.map((lift) => ({
+    id: uid(),
+    name: `${lift.label} day`,
+    exercises: [
+      { exerciseId: findExId(exercises, lift.defaultName), mode: "531", tmLift: lift.key, sets: 3, repRange: "", targetRpe: "", targetWeight: "" },
+    ],
+  }));
+  return {
+    id: uid(),
+    name: "5/3/1 Cycle",
+    phase: "Intensity",
+    weeks: 4,
+    program: "531",
+    startDate: todayISO(),
+    trainingMaxes: tms,
+    templates,
+  };
+}
+
+function blankBlock(name, phase, weeks, dayNames, program) {
+  return {
+    id: uid(),
+    name,
+    phase,
+    weeks,
+    program: program || null,
+    startDate: todayISO(),
+    trainingMaxes: { squat: "", bench: "", deadlift: "", ohp: "" },
+    templates: dayNames.map((n) => ({ id: uid(), name: n, exercises: [] })),
+  };
+}
+
+function quickStart5x5(exercises) {
+  return {
+    id: uid(),
+    name: "5x5 Linear Progression",
+    phase: "Volume",
+    weeks: 8,
+    program: "5x5",
+    startDate: todayISO(),
+    trainingMaxes: { squat: "", bench: "", deadlift: "", ohp: "" },
+    progressionNote: "Add 5 lbs (upper body) or 10 lbs (squat/deadlift) each session you complete all sets/reps. If you fail a session twice in a row, deload 10% and rebuild.",
+    templates: [
+      {
+        id: uid(),
+        name: "Workout A (Squat focus)",
+        exercises: [
+          { exerciseId: findExId(exercises, "Barbell Back Squat"), mode: "plain", sets: 5, repRange: "5", targetRpe: "", targetWeight: "" },
+          { exerciseId: findExId(exercises, "Barbell Bench Press"), mode: "plain", sets: 5, repRange: "5", targetRpe: "", targetWeight: "" },
+          { exerciseId: findExId(exercises, "Barbell Row"), mode: "plain", sets: 5, repRange: "5", targetRpe: "", targetWeight: "" },
+        ],
+      },
+      {
+        id: uid(),
+        name: "Workout B (Deadlift focus)",
+        exercises: [
+          { exerciseId: findExId(exercises, "Barbell Back Squat"), mode: "plain", sets: 5, repRange: "5", targetRpe: "", targetWeight: "" },
+          { exerciseId: findExId(exercises, "Overhead Press"), mode: "plain", sets: 5, repRange: "5", targetRpe: "", targetWeight: "" },
+          { exerciseId: findExId(exercises, "Conventional Deadlift"), mode: "plain", sets: 1, repRange: "5", targetRpe: "", targetWeight: "" },
+        ],
+      },
+    ],
+  };
+}
+
+function quickStartPPL(exercises, sixDay) {
+  const push = {
+    id: uid(),
+    name: "Push",
+    exercises: [
+      { exerciseId: findExId(exercises, "Barbell Bench Press"), mode: "plain", sets: 4, repRange: "6-8", targetRpe: "8", targetWeight: "" },
+      { exerciseId: findExId(exercises, "Incline Dumbbell Press"), mode: "plain", sets: 3, repRange: "8-10", targetRpe: "8", targetWeight: "" },
+      { exerciseId: findExId(exercises, "Overhead Press"), mode: "plain", sets: 3, repRange: "8-10", targetRpe: "8", targetWeight: "" },
+      { exerciseId: findExId(exercises, "Lateral Raise"), mode: "plain", sets: 3, repRange: "12-15", targetRpe: "9", targetWeight: "" },
+      { exerciseId: findExId(exercises, "Triceps Pushdown"), mode: "plain", sets: 3, repRange: "10-12", targetRpe: "9", targetWeight: "" },
+    ],
+  };
+  const pull = {
+    id: uid(),
+    name: "Pull",
+    exercises: [
+      { exerciseId: findExId(exercises, "Conventional Deadlift"), mode: "plain", sets: 3, repRange: "5", targetRpe: "8", targetWeight: "" },
+      { exerciseId: findExId(exercises, "Lat Pulldown"), mode: "plain", sets: 3, repRange: "8-10", targetRpe: "8", targetWeight: "" },
+      { exerciseId: findExId(exercises, "Barbell Row"), mode: "plain", sets: 3, repRange: "8-10", targetRpe: "8", targetWeight: "" },
+      { exerciseId: findExId(exercises, "Face Pull"), mode: "plain", sets: 3, repRange: "12-15", targetRpe: "9", targetWeight: "" },
+      { exerciseId: findExId(exercises, "Barbell Curl"), mode: "plain", sets: 3, repRange: "10-12", targetRpe: "9", targetWeight: "" },
+    ],
+  };
+  const legs = {
+    id: uid(),
+    name: "Legs",
+    exercises: [
+      { exerciseId: findExId(exercises, "Barbell Back Squat"), mode: "plain", sets: 4, repRange: "6-8", targetRpe: "8", targetWeight: "" },
+      { exerciseId: findExId(exercises, "Romanian Deadlift"), mode: "plain", sets: 3, repRange: "8-10", targetRpe: "8", targetWeight: "" },
+      { exerciseId: findExId(exercises, "Leg Press"), mode: "plain", sets: 3, repRange: "10-12", targetRpe: "9", targetWeight: "" },
+      { exerciseId: findExId(exercises, "Leg Curl (Lying)"), mode: "plain", sets: 3, repRange: "10-12", targetRpe: "9", targetWeight: "" },
+      { exerciseId: findExId(exercises, "Standing Calf Raise"), mode: "plain", sets: 4, repRange: "12-15", targetRpe: "9", targetWeight: "" },
+    ],
+  };
+  return {
+    id: uid(),
+    name: sixDay ? "Push/Pull/Legs (6-day)" : "Push/Pull/Legs (3-day)",
+    phase: "Volume",
+    weeks: 6,
+    program: "ppl",
+    startDate: todayISO(),
+    trainingMaxes: { squat: "", bench: "", deadlift: "", ohp: "" },
+    templates: sixDay
+      ? [push, pull, legs, { ...push, id: uid() }, { ...pull, id: uid() }, { ...legs, id: uid() }]
+      : [push, pull, legs],
+  };
+}
+
+function quickStartUpperLower(exercises) {
+  return {
+    id: uid(),
+    name: "Upper/Lower Split",
+    phase: "Volume",
+    weeks: 6,
+    program: "upperlower",
+    startDate: todayISO(),
+    trainingMaxes: { squat: "", bench: "", deadlift: "", ohp: "" },
+    templates: [
+      {
+        id: uid(),
+        name: "Upper A (Strength)",
+        exercises: [
+          { exerciseId: findExId(exercises, "Barbell Bench Press"), mode: "plain", sets: 4, repRange: "5", targetRpe: "8", targetWeight: "" },
+          { exerciseId: findExId(exercises, "Barbell Row"), mode: "plain", sets: 4, repRange: "5", targetRpe: "8", targetWeight: "" },
+          { exerciseId: findExId(exercises, "Overhead Press"), mode: "plain", sets: 3, repRange: "8", targetRpe: "8", targetWeight: "" },
+          { exerciseId: findExId(exercises, "Lat Pulldown"), mode: "plain", sets: 3, repRange: "8-10", targetRpe: "8", targetWeight: "" },
+          { exerciseId: findExId(exercises, "Barbell Curl"), mode: "plain", sets: 3, repRange: "10-12", targetRpe: "9", targetWeight: "" },
+        ],
+      },
+      {
+        id: uid(),
+        name: "Lower A (Strength)",
+        exercises: [
+          { exerciseId: findExId(exercises, "Barbell Back Squat"), mode: "plain", sets: 4, repRange: "5", targetRpe: "8", targetWeight: "" },
+          { exerciseId: findExId(exercises, "Romanian Deadlift"), mode: "plain", sets: 3, repRange: "8", targetRpe: "8", targetWeight: "" },
+          { exerciseId: findExId(exercises, "Leg Press"), mode: "plain", sets: 3, repRange: "10", targetRpe: "8", targetWeight: "" },
+          { exerciseId: findExId(exercises, "Standing Calf Raise"), mode: "plain", sets: 4, repRange: "12-15", targetRpe: "9", targetWeight: "" },
+          { exerciseId: findExId(exercises, "Hanging Leg Raise"), mode: "plain", sets: 3, repRange: "10-15", targetRpe: "9", targetWeight: "" },
+        ],
+      },
+      {
+        id: uid(),
+        name: "Upper B (Hypertrophy)",
+        exercises: [
+          { exerciseId: findExId(exercises, "Incline Dumbbell Press"), mode: "plain", sets: 4, repRange: "8-10", targetRpe: "8", targetWeight: "" },
+          { exerciseId: findExId(exercises, "Seated Cable Row"), mode: "plain", sets: 4, repRange: "8-10", targetRpe: "8", targetWeight: "" },
+          { exerciseId: findExId(exercises, "Lateral Raise"), mode: "plain", sets: 3, repRange: "12-15", targetRpe: "9", targetWeight: "" },
+          { exerciseId: findExId(exercises, "Triceps Pushdown"), mode: "plain", sets: 3, repRange: "10-12", targetRpe: "9", targetWeight: "" },
+          { exerciseId: findExId(exercises, "Hammer Curl"), mode: "plain", sets: 3, repRange: "10-12", targetRpe: "9", targetWeight: "" },
+        ],
+      },
+      {
+        id: uid(),
+        name: "Lower B (Hypertrophy)",
+        exercises: [
+          { exerciseId: findExId(exercises, "Front Squat"), mode: "plain", sets: 4, repRange: "8", targetRpe: "8", targetWeight: "" },
+          { exerciseId: findExId(exercises, "Bulgarian Split Squat"), mode: "plain", sets: 3, repRange: "10-12", targetRpe: "9", targetWeight: "" },
+          { exerciseId: findExId(exercises, "Leg Curl (Lying)"), mode: "plain", sets: 3, repRange: "10-12", targetRpe: "9", targetWeight: "" },
+          { exerciseId: findExId(exercises, "Hip Thrust"), mode: "plain", sets: 3, repRange: "10-12", targetRpe: "8", targetWeight: "" },
+          { exerciseId: findExId(exercises, "Seated Calf Raise"), mode: "plain", sets: 4, repRange: "12-15", targetRpe: "9", targetWeight: "" },
+        ],
+      },
+    ],
+  };
+}
+
+const PROGRAM_DEFS = [
+  { id: "531", name: "5/3/1", desc: "4-week wave (5s/3s/1s/deload) off training maxes for squat, bench, deadlift, OHP.", needsTM: true, dayNames: ["Squat day", "Bench day", "Deadlift day", "OHP day"] },
+  { id: "5x5", name: "5x5 Linear Progression", desc: "Two alternating full-body days, add weight each session you hit all reps.", needsTM: false, dayNames: ["Workout A", "Workout B"] },
+  { id: "ppl3", name: "Push/Pull/Legs (3-day)", desc: "One push, one pull, one legs day per week.", needsTM: false, dayNames: ["Push", "Pull", "Legs"] },
+  { id: "ppl6", name: "Push/Pull/Legs (6-day)", desc: "Same split run twice per week for higher frequency.", needsTM: false, dayNames: ["Push", "Pull", "Legs", "Push", "Pull", "Legs"] },
+  { id: "upperlower", name: "Upper/Lower Split", desc: "4-day split alternating upper and lower body days.", needsTM: false, dayNames: ["Upper A", "Lower A", "Upper B", "Lower B"] },
+  { id: "ulppl", name: "UL/PPL Hybrid (5-day)", desc: "Upper, Lower, Push, Pull, Legs across 5 days — blends total-body frequency with PPL specialization.", needsTM: false, dayNames: ["Upper", "Lower", "Push", "Pull", "Legs"] },
+];
+
+const STORAGE_KEY = "pb-tracker-state-v7";
+
+function round(n, d = 1) {
+  const f = Math.pow(10, d);
+  return Math.round((n + Number.EPSILON) * f) / f;
+}
+
+function est1RM(weight, reps) {
+  if (!weight || !reps) return 0;
+  if (reps === 1) return weight;
+  return weight * (1 + reps / 30);
+}
+
+function todayISO() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function fmtDate(iso) {
+  const d = new Date(iso + "T00:00:00");
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
+function isoFromYMD(y, m, d) {
+  const mm = String(m + 1).padStart(2, "0");
+  const dd = String(d).padStart(2, "0");
+  return `${y}-${mm}-${dd}`;
+}
+
+function daysBetween(aISO, bISO) {
+  const a = new Date(aISO + "T00:00:00");
+  const b = new Date(bISO + "T00:00:00");
+  return Math.round((b - a) / 86400000);
+}
+
+function cycleInfoForBlock(block, dateISO) {
+  if (!block || !block.startDate) return { cycleWeek: 1, cycleNumber: 1 };
+  const elapsedDays = daysBetween(block.startDate, dateISO || todayISO());
+  const elapsedWeeks = Math.max(0, Math.floor(elapsedDays / 7));
+  const cycleNumber = Math.floor(elapsedWeeks / 4) + 1;
+  const cycleWeek = (elapsedWeeks % 4) + 1;
+  return { cycleWeek, cycleNumber };
+}
+
+function resolve531Row(row, block, dateISO) {
+  const { cycleWeek } = cycleInfoForBlock(block, dateISO);
+  const weekDef = FIVE31_WEEKS[cycleWeek - 1];
+  const tm = Number(block?.trainingMaxes?.[row.tmLift]) || 0;
+  const sets = weekDef.pcts.map((pct, i) => ({
+    pct,
+    reps: weekDef.reps[i],
+    weight: tm ? round((pct / 100) * tm, 0) : null,
+  }));
+  return { weekLabel: weekDef.label, cycleWeek, sets };
+}
+
+function lastSessionFor(logs, exerciseId, beforeDate) {
+  const candidates = logs
+    .filter((l) => (!beforeDate || l.date < beforeDate) && l.entries.some((e) => e.exerciseId === exerciseId))
+    .sort((a, b) => (a.date < b.date ? 1 : -1));
+  if (candidates.length === 0) return null;
+  const log = candidates[0];
+  const entry = log.entries.find((e) => e.exerciseId === exerciseId);
+  return { date: log.date, sets: entry.sets };
+}
+
+function muscleRestHoursToNextDay(block, exercises, fromIndex) {
+  const templates = block.templates;
+  if (templates.length === 0) return {};
+  const fromTemplate = templates[fromIndex];
+  const fromMuscles = new Set();
+  fromTemplate.exercises.forEach((te) => {
+    const exo = exercises.find((e) => e.id === te.exerciseId);
+    if (exo) fromMuscles.add(exo.muscle);
+  });
+
+  const result = {};
+  fromMuscles.forEach((muscle) => {
+    for (let step = 1; step <= templates.length; step++) {
+      const idx = (fromIndex + step) % templates.length;
+      const t = templates[idx];
+      const hits = t.exercises.some((te) => {
+        const exo = exercises.find((e) => e.id === te.exerciseId);
+        return exo && exo.muscle === muscle;
+      });
+      if (hits) {
+        result[muscle] = step * 24;
+        return;
+      }
+    }
+    result[muscle] = null;
+  });
+  return result;
+}
+
+/* ===================== UNIT CONVERSION ===================== */
+const LB_PER_KG = 2.2046226218;
+function lbToKg(lb) { return lb / LB_PER_KG; }
+function kgToLb(kg) { return kg * LB_PER_KG; }
+function convertWeight(value, fromUnit, toUnit) {
+  if (!value || fromUnit === toUnit) return value;
+  return fromUnit === "lb" ? round(lbToKg(value), 1) : round(kgToLb(value), 1);
+}
+
+/* ===================== RANKING CONFIG ===================== */
+const RANK_TIERS = ["Beginner", "Novice", "Intermediate", "Advanced", "Elite"];
+const RANK_TABLE_KG = {
+  squat:    { M: [0.75, 1.25, 1.75, 2.25, 2.85], F: [0.50, 0.80, 1.25, 1.75, 2.25] },
+  bench:    { M: [0.50, 0.90, 1.25, 1.75, 2.00], F: [0.30, 0.55, 0.75, 1.05, 1.35] },
+  deadlift: { M: [1.00, 1.50, 2.00, 2.65, 3.25], F: [0.70, 1.00, 1.40, 1.90, 2.65] },
+  ohp:      { M: [0.35, 0.55, 0.80, 1.05, 1.30], F: [0.20, 0.35, 0.50, 0.65, 0.85] },
+};
+
+function tierForRatio(lift, ratio, gender) {
+  const table = RANK_TABLE_KG[lift]?.[gender === "F" ? "F" : "M"];
+  if (!table) return null;
+  let tierIdx = -1;
+  for (let i = 0; i < table.length; i++) {
+    if (ratio >= table[i]) tierIdx = i;
+  }
+  if (tierIdx === -1) {
+    return { tierIdx: -1, tierName: "Untiered", progressToNext: ratio / table[0], nextTierName: RANK_TIERS[0] };
+  }
+  const isMax = tierIdx === table.length - 1;
+  const progressToNext = isMax ? 1 : (ratio - table[tierIdx]) / (table[tierIdx + 1] - table[tierIdx]);
+  return {
+    tierIdx,
+    tierName: RANK_TIERS[tierIdx],
+    progressToNext: Math.min(1, Math.max(0, progressToNext)),
+    nextTierName: isMax ? null : RANK_TIERS[tierIdx + 1],
+  };
+}
+
+function normalizedScore(tierInfo) {
+  if (!tierInfo) return 0;
+  if (tierInfo.tierIdx === -1) return tierInfo.progressToNext * 20;
+  return ((tierInfo.tierIdx + tierInfo.progressToNext) / RANK_TIERS.length) * 100;
+}
+
+/* ===================== DOTS ===================== */
+const DOTS_COEFF = {
+  M: { A: -0.0000010930, B: 0.0007391293, C: -0.1918759221, D: 24.0900756, E: -307.75076 },
+  F: { A: -0.0000010706, B: 0.0005158568, C: -0.1126655495, D: 13.6175032, E: -57.96288 },
+};
+function calcDOTS(totalKg, bwKg, gender) {
+  if (!totalKg || !bwKg) return null;
+  const c = DOTS_COEFF[gender === "F" ? "F" : "M"];
+  const denom = c.A * bwKg ** 4 + c.B * bwKg ** 3 + c.C * bwKg ** 2 + c.D * bwKg + c.E;
+  if (!denom) return null;
+  return round((totalKg * 500) / denom, 1);
+}
+const DOTS_TIERS = [
+  { name: "Novice", min: 300 },
+  { name: "Intermediate", min: 400 },
+  { name: "Advanced", min: 450 },
+  { name: "Elite", min: 500 },
+  { name: "World Class", min: 600 },
+];
+function dotsTierFor(score) {
+  if (score == null) return null;
+  let tier = null;
+  for (const t of DOTS_TIERS) if (score >= t.min) tier = t.name;
+  return tier;
+}
+
+const PAPER_BG = "#f3e9d2";
+const INK = "#3b2f1e";
+const INK_SOFT = "#6b5a3e";
+const ACCENT = "#8a3324";
+const GOLD = "#b8860b";
+
+const TAB_ORDER = ["exercises", "program", "calendar", "log", "progress", "trophies", "notes"];
+
+/* ===================== STORAGE (localStorage, standalone version) ===================== */
+const storage = {
+  get(key) {
+    try {
+      const raw = localStorage.getItem(key);
+      return raw ? { value: raw } : null;
+    } catch (e) {
+      return null;
+    }
+  },
+  set(key, value) {
+    try {
+      localStorage.setItem(key, value);
+      return { key, value };
+    } catch (e) {
+      return null;
+    }
+  },
+};
+
+/* ===================== USER STATS ===================== */
+
+function buildUserStats({ logs, exercises, bodyweightLogs, unit, gender }) {
+  function bwAt(dateISO) {
+    if (bodyweightLogs.length === 0) return null;
+    const sorted = [...bodyweightLogs].sort((a, b) => Math.abs(daysBetween(a.date, dateISO)) - Math.abs(daysBetween(b.date, dateISO)));
+    return sorted[0]?.weight ?? null;
+  }
+  function bwAtKg(dateISO) {
+    const bw = bwAt(dateISO);
+    return bw == null ? null : (unit === "kg" ? bw : lbToKg(bw));
+  }
+
+  const perExercisePRs = {};
+  logs.forEach((log) => {
+    log.entries.forEach((entry) => {
+      let best = 0;
+      entry.sets.forEach((s) => {
+        const e1 = est1RM(s.weight, Math.min(s.reps, 10) || s.reps);
+        if (e1 > best) best = e1;
+      });
+      if (!best) return;
+      if (!perExercisePRs[entry.exerciseId]) perExercisePRs[entry.exerciseId] = { best: 0, history: [] };
+      perExercisePRs[entry.exerciseId].history.push({ date: log.date, e1rm: round(best, 1) });
+      if (best > perExercisePRs[entry.exerciseId].best) perExercisePRs[entry.exerciseId].best = round(best, 1);
+    });
+  });
+  Object.values(perExercisePRs).forEach((p) => p.history.sort((a, b) => (a.date < b.date ? -1 : 1)));
+
+  const mainLiftStats = {};
+  TM_LIFTS.forEach((l) => {
+    const exo = exercises.find((e) => e.isMain && (e.name === l.defaultName || e.name.toLowerCase().includes(l.label.toLowerCase())));
+    if (!exo) { mainLiftStats[l.key] = null; return; }
+    const pr = perExercisePRs[exo.id];
+    if (!pr || pr.best === 0) { mainLiftStats[l.key] = { exerciseId: exo.id, exerciseName: exo.name, e1rm: null }; return; }
+    const bestEntry = [...pr.history].sort((a, b) => b.e1rm - a.e1rm)[0];
+    const e1rmKg = unit === "kg" ? bestEntry.e1rm : lbToKg(bestEntry.e1rm);
+    const bw = bwAtKg(bestEntry.date);
+    mainLiftStats[l.key] = {
+      exerciseId: exo.id,
+      exerciseName: exo.name,
+      e1rm: bestEntry.e1rm,
+      e1rmKg,
+      bwAtPR: bw,
+      ratio: bw ? e1rmKg / bw : null,
+      prDate: bestEntry.date,
+    };
+  });
+
+  let totalVolume = 0;
+  let totalReps = 0;
+  let sbdVolume = 0;
+  const sbdNames = TM_LIFTS.filter((l) => l.key !== "ohp").map((l) => l.defaultName);
+  logs.forEach((log) => {
+    log.entries.forEach((entry) => {
+      const exo = exercises.find((e) => e.id === entry.exerciseId);
+      entry.sets.forEach((s) => {
+        const vol = (s.weight || 0) * (s.reps || 0);
+        totalVolume += vol;
+        totalReps += s.reps || 0;
+        if (exo && sbdNames.includes(exo.name)) sbdVolume += vol;
+      });
+    });
+  });
+
+  let dots = null;
+  let dotsTier = null;
+  if (mainLiftStats.squat?.e1rmKg && mainLiftStats.bench?.e1rmKg && mainLiftStats.deadlift?.e1rmKg) {
+    const totalKg = mainLiftStats.squat.e1rmKg + mainLiftStats.bench.e1rmKg + mainLiftStats.deadlift.e1rmKg;
+    const refDate = [mainLiftStats.squat.prDate, mainLiftStats.bench.prDate, mainLiftStats.deadlift.prDate].sort().pop();
+    const bwKg = bwAtKg(refDate);
+    dots = bwKg ? calcDOTS(totalKg, bwKg, gender) : null;
+    dotsTier = dots != null ? dotsTierFor(dots) : null;
+  }
+
+  const sortedLogDates = Array.from(new Set(logs.map((l) => l.date))).sort();
+  const workoutCount = logs.length;
+  function isoWeekKey(dateISO) {
+    const d = new Date(dateISO + "T00:00:00");
+    const onejan = new Date(d.getFullYear(), 0, 1);
+    const wk = Math.ceil(((d - onejan) / 86400000 + onejan.getDay() + 1) / 7);
+    return `${d.getFullYear()}-W${String(wk).padStart(2, "0")}`;
+  }
+  const weeksWithSessions = Array.from(new Set(sortedLogDates.map(isoWeekKey))).sort();
+  let longestStreak = 0;
+  let curStreak = 0;
+  let prevWeekIdx = null;
+  weeksWithSessions.forEach((wk) => {
+    if (prevWeekIdx === null) {
+      curStreak = 1;
+    } else {
+      curStreak += 1;
+    }
+    longestStreak = Math.max(longestStreak, curStreak);
+    prevWeekIdx = wk;
+  });
+  const currentStreak = weeksWithSessions.length;
+
+  const exercisesEverLogged = new Set();
+  logs.forEach((l) => l.entries.forEach((e) => exercisesEverLogged.add(e.exerciseId)));
+
+  let recentPRCount = 0;
+  const cutoff = todayISO();
+  Object.entries(perExercisePRs).forEach(([, data]) => {
+    let runningBest = 0;
+    data.history.forEach((h) => {
+      if (h.e1rm > runningBest) {
+        runningBest = h.e1rm;
+        if (daysBetween(h.date, cutoff) <= 30) recentPRCount++;
+      }
+    });
+  });
+
+  return {
+    perExercisePRs,
+    mainLiftStats,
+    totalVolume: round(totalVolume),
+    totalReps,
+    sbdVolume: round(sbdVolume),
+    dots,
+    dotsTier,
+    workoutCount,
+    currentStreak,
+    longestStreak,
+    exercisesEverLogged,
+    recentPRCount,
+    bwAt,
+    bwAtKg,
+  };
+}
+
+/* ===================== ACHIEVEMENTS CONFIG ===================== */
+
+const BW_MULTIPLES = [0.5, 1, 1.5, 2, 2.5, 3];
+const PLATE_MILESTONES_LB = [135, 225, 315, 405];
+const VOLUME_TIERS_KG = [100000, 500000, 1000000, 5000000];
+
+function buildAchievements(unit) {
+  const achievements = [];
+
+  TM_LIFTS.forEach((lift) => {
+    BW_MULTIPLES.forEach((mult) => {
+      achievements.push({
+        id: `bwmult_${lift.key}_${mult}`,
+        name: `${mult}x Bodyweight ${lift.label}`,
+        description: `Hit a ${lift.label} e1RM of ${mult}x your bodyweight.`,
+        category: "PR Milestones",
+        icon: "barbell",
+        tier: mult >= 2.5 ? "gold" : mult >= 1.5 ? "silver" : "bronze",
+        check: (stats) => {
+          const ls = stats.mainLiftStats[lift.key];
+          if (!ls || !ls.ratio) return { earned: false, progress: 0, label: "Not enough data" };
+          const earned = ls.ratio >= mult;
+          return { earned, progress: Math.min(1, ls.ratio / mult), label: `${round(ls.ratio, 2)}x / ${mult}x bodyweight` };
+        },
+      });
+    });
+  });
+
+  TM_LIFTS.forEach((lift) => {
+    PLATE_MILESTONES_LB.forEach((lbVal) => {
+      const displayVal = unit === "kg" ? round(lbToKg(lbVal)) : lbVal;
+      achievements.push({
+        id: `plate_${lift.key}_${lbVal}`,
+        name: `${displayVal}${unit} ${lift.label}`,
+        description: `Hit a ${displayVal}${unit} e1RM on ${lift.label}.`,
+        category: "PR Milestones",
+        icon: "barbell",
+        tier: lbVal >= 315 ? "gold" : lbVal >= 225 ? "silver" : "bronze",
+        check: (stats) => {
+          const ls = stats.mainLiftStats[lift.key];
+          if (!ls || ls.e1rm == null) return { earned: false, progress: 0, label: "Not enough data" };
+          const earned = ls.e1rm >= displayVal;
+          return { earned, progress: Math.min(1, ls.e1rm / displayVal), label: `${round(ls.e1rm)} / ${displayVal} ${unit}` };
+        },
+      });
+    });
+  });
+
+  achievements.push({
+    id: "first_exercise",
+    name: "First Steps",
+    description: "Log any exercise for the first time.",
+    category: "PR Milestones",
+    icon: "barbell",
+    tier: "bronze",
+    check: (stats) => ({ earned: stats.exercisesEverLogged.size > 0, progress: stats.exercisesEverLogged.size > 0 ? 1 : 0, label: stats.exercisesEverLogged.size > 0 ? "Earned" : "Log any exercise" }),
+  });
+
+  VOLUME_TIERS_KG.forEach((kgVal, i) => {
+    const displayVal = unit === "kg" ? kgVal : round(kgToLb(kgVal));
+    achievements.push({
+      id: `volume_${kgVal}`,
+      name: `${displayVal.toLocaleString()} ${unit} Moved`,
+      description: `Move a lifetime total of ${displayVal.toLocaleString()} ${unit} across all logged sets.`,
+      category: "Volume",
+      icon: "plates",
+      tier: i >= 2 ? "gold" : i >= 1 ? "silver" : "bronze",
+      check: (stats) => {
+        const earned = stats.totalVolume >= displayVal;
+        return { earned, progress: Math.min(1, stats.totalVolume / displayVal), label: `${Math.round(stats.totalVolume).toLocaleString()} / ${displayVal.toLocaleString()} ${unit}` };
+      },
+    });
+  });
+
+  [50000, 250000, 500000].forEach((kgVal, i) => {
+    const displayVal = unit === "kg" ? kgVal : round(kgToLb(kgVal));
+    achievements.push({
+      id: `sbdvolume_${kgVal}`,
+      name: `${displayVal.toLocaleString()} ${unit} SBD Tonnage`,
+      description: `Move ${displayVal.toLocaleString()} ${unit} combined across squat, bench, and deadlift.`,
+      category: "Volume",
+      icon: "plates",
+      tier: i >= 2 ? "gold" : i >= 1 ? "silver" : "bronze",
+      check: (stats) => {
+        const earned = stats.sbdVolume >= displayVal;
+        return { earned, progress: Math.min(1, stats.sbdVolume / displayVal), label: `${Math.round(stats.sbdVolume).toLocaleString()} / ${displayVal.toLocaleString()} ${unit}` };
+      },
+    });
+  });
+
+  [1000, 5000, 10000, 25000].forEach((repVal, i) => {
+    achievements.push({
+      id: `reps_${repVal}`,
+      name: `${repVal.toLocaleString()} Reps Logged`,
+      description: `Log ${repVal.toLocaleString()} total reps across all exercises.`,
+      category: "Volume",
+      icon: "plates",
+      tier: i >= 2 ? "gold" : i >= 1 ? "silver" : "bronze",
+      check: (stats) => {
+        const earned = stats.totalReps >= repVal;
+        return { earned, progress: Math.min(1, stats.totalReps / repVal), label: `${stats.totalReps.toLocaleString()} / ${repVal.toLocaleString()} reps` };
+      },
+    });
+  });
+
+  DOTS_TIERS.forEach((t, i) => {
+    achievements.push({
+      id: `dots_${t.name.replace(/\s/g, "")}`,
+      name: `DOTS: ${t.name}`,
+      description: `Reach a DOTS score of ${t.min} (based on best Squat+Bench+Deadlift total).`,
+      category: "Strength Score",
+      icon: "medal",
+      tier: i >= 3 ? "gold" : i >= 1 ? "silver" : "bronze",
+      check: (stats) => {
+        if (stats.dots == null) return { earned: false, progress: 0, label: "Need Squat, Bench & Deadlift PRs + bodyweight" };
+        const earned = stats.dots >= t.min;
+        return { earned, progress: Math.min(1, stats.dots / t.min), label: `DOTS ${stats.dots} / ${t.min}` };
+      },
+    });
+  });
+
+  TM_LIFTS.forEach((lift) => {
+    RANK_TIERS.forEach((tierName, i) => {
+      achievements.push({
+        id: `rank_${lift.key}_${tierName}`,
+        name: `${tierName} ${lift.label}`,
+        description: `Reach ${tierName} strength-to-bodyweight ratio on ${lift.label}.`,
+        category: "Strength Score",
+        icon: "star",
+        tier: i >= 3 ? "gold" : i >= 1 ? "silver" : "bronze",
+        check: (stats) => {
+          const ls = stats.mainLiftStats[lift.key];
+          if (!ls || !ls.ratio) return { earned: false, progress: 0, label: "Not enough data" };
+          return { earned: null, progress: null, label: null, _needsGender: true, _lift: lift.key, _ratio: ls.ratio };
+        },
+      });
+    });
+  });
+
+  [10, 50, 100, 250, 500].forEach((n, i) => {
+    achievements.push({
+      id: `sessions_${n}`,
+      name: `${n} Sessions Logged`,
+      description: `Log ${n} total workout sessions.`,
+      category: "Consistency",
+      icon: "flame",
+      tier: i >= 3 ? "gold" : i >= 1 ? "silver" : "bronze",
+      check: (stats) => {
+        const earned = stats.workoutCount >= n;
+        return { earned, progress: Math.min(1, stats.workoutCount / n), label: `${stats.workoutCount} / ${n} sessions` };
+      },
+    });
+  });
+
+  [4, 12, 26, 52].forEach((weeks, i) => {
+    achievements.push({
+      id: `streak_${weeks}`,
+      name: `${weeks}-Week Streak`,
+      description: `Train at least once in ${weeks} consecutive weeks.`,
+      category: "Consistency",
+      icon: "flame",
+      tier: i >= 2 ? "gold" : i >= 1 ? "silver" : "bronze",
+      check: (stats) => {
+        const earned = stats.longestStreak >= weeks;
+        return { earned, progress: Math.min(1, stats.longestStreak / weeks), label: `${stats.longestStreak} / ${weeks} weeks (longest)` };
+      },
+    });
+  });
+
+  achievements.push({
+    id: "pr_burst",
+    name: "PR Burst",
+    description: "Set 5 new PRs within a 30-day window.",
+    category: "Consistency",
+    icon: "flame",
+    tier: "silver",
+    check: (stats) => ({ earned: stats.recentPRCount >= 5, progress: Math.min(1, stats.recentPRCount / 5), label: `${stats.recentPRCount} / 5 recent PRs` }),
+  });
+
+  return achievements;
+}
+
+function resolveAchievement(ach, stats, gender) {
+  const result = ach.check(stats);
+  if (result._needsGender) {
+    const tierInfo = tierForRatio(result._lift, result._ratio, gender);
+    const targetIdx = RANK_TIERS.indexOf(ach.name.split(" ")[0]);
+    const earned = tierInfo && tierInfo.tierIdx >= targetIdx;
+    const table = RANK_TABLE_KG[result._lift][gender === "F" ? "F" : "M"];
+    const threshold = table[targetIdx];
+    const progress = Math.min(1, result._ratio / threshold);
+    return { earned, progress, label: `${round(result._ratio, 2)}x / ${threshold}x bodyweight` };
+  }
+  return result;
+}
+
+const ICONS = {
+  barbell: Dumbbell,
+  plates: Award,
+  medal: Medal,
+  star: Star,
+  flame: Flame,
+};
+
+const TIER_COLOR = {
+  bronze: "#a0622d",
+  silver: "#8a8a92",
+  gold: GOLD,
+};
+
+function App() {
+  const [tab, setTab] = useState("exercises");
+  const [exercises, setExercises] = useState(SEED_EXERCISES);
+  const [blocks, setBlocks] = useState([]);
+  const [savedPrograms, setSavedPrograms] = useState([]);
+  const [logs, setLogs] = useState([]);
+  const [schedule, setSchedule] = useState(null);
+  const [bodyweightLogs, setBodyweightLogs] = useState([]);
+  const [generalNotes, setGeneralNotes] = useState("");
+  const [progressSettings, setProgressSettings] = useState({
+    selectedTarget: null,
+    bodyweightShown: false,
+    detailShown: false,
+  });
+  const [gender, setGender] = useState(null);
+  const [unit, setUnit] = useState("lb");
+  const [seenAchievementIds, setSeenAchievementIds] = useState([]);
+  const [toast, setToast] = useState(null);
+  const [loaded, setLoaded] = useState(false);
+  const [saveStatus, setSaveStatus] = useState("idle");
+  const [quoteSeed] = useState(() => Math.floor(Math.random() * 1000));
+
+  const touchStartX = useRef(null);
+  const touchStartY = useRef(null);
+  const wheelAccumX = useRef(0);
+  const wheelCooldown = useRef(false);
+  const [slideDir, setSlideDir] = useState(0);
+  const [animKey, setAnimKey] = useState(0);
+
+  useEffect(() => {
+    try {
+      const res = storage.get(STORAGE_KEY);
+      if (res && res.value) {
+        const data = JSON.parse(res.value);
+        if (data.exercises) setExercises(data.exercises);
+        if (data.blocks) setBlocks(data.blocks);
+        if (data.savedPrograms) setSavedPrograms(data.savedPrograms);
+        if (data.logs) setLogs(data.logs);
+        if (data.schedule) setSchedule(data.schedule);
+        if (data.bodyweightLogs) setBodyweightLogs(data.bodyweightLogs);
+        if (data.progressSettings) setProgressSettings((prev) => ({ ...prev, ...data.progressSettings }));
+        if (data.generalNotes) setGeneralNotes(data.generalNotes);
+        if (data.gender) setGender(data.gender);
+        if (data.unit) setUnit(data.unit);
+        if (data.seenAchievementIds) setSeenAchievementIds(data.seenAchievementIds);
+      }
+    } catch (e) {
+      // no saved data yet
+    } finally {
+      setLoaded(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!loaded) return;
+    setSaveStatus("saving");
+    const t = setTimeout(() => {
+      try {
+        const result = storage.set(
+          STORAGE_KEY,
+          JSON.stringify({ exercises, blocks, savedPrograms, logs, schedule, bodyweightLogs, progressSettings, generalNotes, gender, unit, seenAchievementIds })
+        );
+        setSaveStatus(result ? "saved" : "error");
+      } catch (e) {
+        setSaveStatus("error");
+      }
+    }, 400);
+    return () => clearTimeout(t);
+  }, [exercises, blocks, savedPrograms, logs, schedule, bodyweightLogs, progressSettings, generalNotes, gender, unit, seenAchievementIds, loaded]);
+
+  const exerciseById = useCallback((id) => exercises.find((e) => e.id === id), [exercises]);
+
+  function updateBlock(id, patch) {
+    setBlocks((prev) => prev.map((b) => (b.id === id ? { ...b, ...patch } : b)));
+  }
+
+  const userStats = useMemo(
+    () => buildUserStats({ logs, exercises, bodyweightLogs, unit, gender }),
+    [logs, exercises, bodyweightLogs, unit, gender]
+  );
+
+  const achievementsConfig = useMemo(() => buildAchievements(unit), [unit]);
+
+  const resolvedAchievements = useMemo(() => {
+    if (!gender) return [];
+    return achievementsConfig.map((ach) => ({ ...ach, result: resolveAchievement(ach, userStats, gender) }));
+  }, [achievementsConfig, userStats, gender]);
+
+  useEffect(() => {
+    if (!loaded || resolvedAchievements.length === 0) return;
+    const newlyEarned = resolvedAchievements.filter((a) => a.result.earned && !seenAchievementIds.includes(a.id));
+    if (newlyEarned.length > 0) {
+      setToast(newlyEarned[0]);
+      setSeenAchievementIds((prev) => [...prev, ...newlyEarned.map((a) => a.id)]);
+      const t = setTimeout(() => setToast(null), 4500);
+      return () => clearTimeout(t);
+    }
+  }, [resolvedAchievements, loaded]);
+
+  function goToTab(newTab) {
+    const curIdx = TAB_ORDER.indexOf(tab);
+    const newIdx = TAB_ORDER.indexOf(newTab);
+    setSlideDir(newIdx > curIdx ? 1 : newIdx < curIdx ? -1 : 0);
+    setAnimKey((k) => k + 1);
+    setTab(newTab);
+  }
+
+  function handleTouchStart(e) {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+  }
+  function handleTouchEnd(e) {
+    if (touchStartX.current === null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    const dy = e.changedTouches[0].clientY - touchStartY.current;
+    touchStartX.current = null;
+    if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+    const curIdx = TAB_ORDER.indexOf(tab);
+    if (dx < 0 && curIdx < TAB_ORDER.length - 1) {
+      goToTab(TAB_ORDER[curIdx + 1]);
+    } else if (dx > 0 && curIdx > 0) {
+      goToTab(TAB_ORDER[curIdx - 1]);
+    }
+  }
+  function handleWheel(e) {
+    if (Math.abs(e.deltaX) < Math.abs(e.deltaY) * 1.2) return;
+    if (wheelCooldown.current) return;
+    wheelAccumX.current += e.deltaX;
+    const THRESHOLD = 70;
+    if (Math.abs(wheelAccumX.current) > THRESHOLD) {
+      const curIdx = TAB_ORDER.indexOf(tab);
+      if (wheelAccumX.current > 0 && curIdx < TAB_ORDER.length - 1) {
+        goToTab(TAB_ORDER[curIdx + 1]);
+      } else if (wheelAccumX.current < 0 && curIdx > 0) {
+        goToTab(TAB_ORDER[curIdx - 1]);
+      }
+      wheelAccumX.current = 0;
+      wheelCooldown.current = true;
+      setTimeout(() => { wheelCooldown.current = false; }, 500);
+    }
+  }
+
+  return (
+    <div
+      style={{
+        maxWidth: 940,
+        margin: "0 auto",
+        fontFamily: "'Patrick Hand', cursive",
+        backgroundColor: PAPER_BG,
+        backgroundImage:
+          "radial-gradient(circle at 20% 30%, rgba(139,107,58,0.08) 0%, transparent 45%), radial-gradient(circle at 80% 70%, rgba(139,107,58,0.08) 0%, transparent 45%), repeating-linear-gradient(0deg, rgba(120,90,50,0.04) 0px, transparent 1px, transparent 26px)",
+        color: INK,
+        minHeight: "100vh",
+        position: "relative",
+        overflowX: "hidden",
+      }}
+    >
+      <style>{`
+        .nb-header { font-family: 'Permanent Marker', cursive; }
+        .nb-script { font-family: 'Caveat', cursive; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-thumb { background: rgba(139,107,58,0.4); border-radius: 4px; }
+        @keyframes slideInLeft { from { transform: translateX(40px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideInRight { from { transform: translateX(-40px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes toastIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .tab-anim-1 { animation: slideInLeft 0.28s ease-out; }
+        .tab-anim--1 { animation: slideInRight 0.28s ease-out; }
+        .tab-anim-0 { animation: fadeIn 0.2s ease-out; }
+        .tab-button { transition: color 0.2s, border-color 0.2s; }
+        .toast-anim { animation: toastIn 0.3s ease-out; }
+        .icon-btn { min-width: 30px; min-height: 30px; display: inline-flex; align-items: center; justify-content: center; }
+        @media (max-width: 480px) {
+          .set-row { flex-wrap: wrap; }
+          .set-row > input { min-height: 34px; }
+        }
+      `}</style>
+
+      <header
+        className="px-3 sm:px-4 py-3 sm:py-4 flex items-center justify-between sticky top-0 z-10 gap-2"
+        style={{ backgroundColor: PAPER_BG, borderBottom: `2px solid ${INK}`, boxShadow: "0 2px 0 rgba(59,47,30,0.15)" }}
+      >
+        <div className="flex items-center gap-2 min-w-0">
+          <DumbbellDoodle size={28} />
+          <h1 className="nb-header text-base sm:text-xl tracking-wide truncate" style={{ color: INK }}>
+            Workout Tracker
+          </h1>
+        </div>
+        <SaveIndicator status={saveStatus} />
+      </header>
+
+      <p className="nb-script text-center text-base px-4 pt-3" style={{ color: INK_SOFT }}>
+        "{randomQuote(quoteSeed)}"
+      </p>
+
+      <nav className="flex px-4 mt-2 overflow-x-auto gap-1" style={{ borderBottom: `2px solid ${INK}` }}>
+        <TabButton icon={<Dumbbell size={15} />} label="Exercises" active={tab === "exercises"} onClick={() => goToTab("exercises")} />
+        <TabButton icon={<LayoutGrid size={15} />} label="Program" active={tab === "program"} onClick={() => goToTab("program")} />
+        <TabButton icon={<CalendarIcon size={15} />} label="Calendar" active={tab === "calendar"} onClick={() => goToTab("calendar")} />
+        <TabButton icon={<ClipboardList size={15} />} label="Log workout" active={tab === "log"} onClick={() => goToTab("log")} />
+        <TabButton icon={<TrendingUp size={15} />} label="Progress" active={tab === "progress"} onClick={() => goToTab("progress")} />
+        <TabButton icon={<Trophy size={15} />} label="Trophies" active={tab === "trophies"} onClick={() => goToTab("trophies")} />
+        <TabButton icon={<StickyNote size={15} />} label="Notes" active={tab === "notes"} onClick={() => goToTab("notes")} />
+      </nav>
+
+      <main className="px-3 sm:px-4 py-4 sm:py-5" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd} onWheel={handleWheel}>
+        <div key={animKey} className={`tab-anim-${slideDir}`}>
+          {tab === "exercises" && <ExercisesTab exercises={exercises} setExercises={setExercises} />}
+          {tab === "program" && (
+            <ProgramTab
+              exercises={exercises}
+              setExercises={setExercises}
+              blocks={blocks}
+              setBlocks={setBlocks}
+              updateBlock={updateBlock}
+              savedPrograms={savedPrograms}
+              setSavedPrograms={setSavedPrograms}
+            />
+          )}
+          {tab === "calendar" && (
+            <CalendarTab blocks={blocks} logs={logs} schedule={schedule} setSchedule={setSchedule} />
+          )}
+          {tab === "log" && (
+            <LogTab
+              exercises={exercises}
+              setExercises={setExercises}
+              blocks={blocks}
+              logs={logs}
+              setLogs={setLogs}
+              exerciseById={exerciseById}
+              schedule={schedule}
+              bodyweightLogs={bodyweightLogs}
+              setBodyweightLogs={setBodyweightLogs}
+              unit={unit}
+            />
+          )}
+          {tab === "progress" && (
+            <ProgressTab
+              exercises={exercises}
+              logs={logs}
+              blocks={blocks}
+              schedule={schedule}
+              exerciseById={exerciseById}
+              bodyweightLogs={bodyweightLogs}
+              setBodyweightLogs={setBodyweightLogs}
+              progressSettings={progressSettings}
+              setProgressSettings={setProgressSettings}
+            />
+          )}
+          {tab === "trophies" && (
+            <TrophiesTab
+              userStats={userStats}
+              resolvedAchievements={resolvedAchievements}
+              gender={gender}
+              setGender={setGender}
+              unit={unit}
+              setUnit={setUnit}
+            />
+          )}
+          {tab === "notes" && <NotesTab generalNotes={generalNotes} setGeneralNotes={setGeneralNotes} blocks={blocks} updateBlock={updateBlock} />}
+        </div>
+      </main>
+
+      {toast && (
+        <div
+          className="toast-anim fixed bottom-4 left-1/2 z-50 px-4 py-2.5 rounded-md flex items-center gap-2"
+          style={{ transform: "translateX(-50%)", background: INK, color: PAPER_BG, boxShadow: "0 4px 12px rgba(0,0,0,0.3)", maxWidth: "90vw" }}
+        >
+          <Trophy size={16} style={{ color: GOLD }} />
+          <span className="text-sm nb-script">Achievement unlocked: <strong>{toast.name}</strong></span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DumbbellDoodle({ size = 24 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 60 30" fill="none">
+      <rect x="2" y="8" width="6" height="14" rx="1.5" stroke={INK} strokeWidth="2" fill="none" />
+      <rect x="10" y="11" width="3" height="8" rx="1" stroke={INK} strokeWidth="1.8" fill="none" />
+      <rect x="13" y="13.5" width="34" height="3" stroke={INK} strokeWidth="1.8" fill="none" />
+      <rect x="47" y="11" width="3" height="8" rx="1" stroke={INK} strokeWidth="1.8" fill="none" />
+      <rect x="52" y="8" width="6" height="14" rx="1.5" stroke={INK} strokeWidth="2" fill="none" />
+    </svg>
+  );
+}
+
+function SaveIndicator({ status }) {
+  if (status === "idle") return null;
+  const map = {
+    saving: { text: "Saving…", color: INK_SOFT },
+    saved: { text: "Saved ✓", color: "#3f6b3f" },
+    error: { text: "Save failed", color: ACCENT },
+  };
+  const s = map[status] || map.saving;
+  return (
+    <span className="nb-script text-base flex items-center gap-1" style={{ color: s.color }}>
+      <Save size={13} /> {s.text}
+    </span>
+  );
+}
+
+function TabButton({ icon, label, active, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      className="tab-button flex items-center gap-1.5 px-3 py-2.5 text-sm whitespace-nowrap nb-script"
+      style={{
+        borderBottom: active ? `3px solid ${ACCENT}` : "3px solid transparent",
+        color: active ? INK : INK_SOFT,
+        fontWeight: active ? 700 : 500,
+        fontSize: "1.05rem",
+      }}
+    >
+      {icon}
+      {label}
+    </button>
+  );
+}
+
+function PaperCard({ children, className = "", style = {} }) {
+  return (
+    <div
+      className={className}
+      style={{
+        background: "rgba(255,252,240,0.55)",
+        border: `1.5px solid ${INK}`,
+        borderRadius: "3px",
+        boxShadow: "2px 3px 0 rgba(59,47,30,0.12)",
+        ...style,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function inputStyle() {
+  return { border: `1.5px solid ${INK}`, borderRadius: 3, background: "rgba(255,252,240,0.7)", color: INK };
+}
+
+/* ===================== EXERCISES TAB ===================== */
+
+function ExercisesTab({ exercises, setExercises }) {
+  const [showForm, setShowForm] = useState(false);
+  const [editing, setEditing] = useState(null);
+  const [filterMuscle, setFilterMuscle] = useState("All");
+  const [search, setSearch] = useState("");
+
+  function upsert(ex) {
+    setExercises((prev) => {
+      const exists = prev.some((p) => p.id === ex.id);
+      return exists ? prev.map((p) => (p.id === ex.id ? ex : p)) : [...prev, ex];
+    });
+    setShowForm(false);
+    setEditing(null);
+  }
+
+  function remove(id) {
+    setExercises((prev) => prev.filter((e) => e.id !== id));
+  }
+
+  let filtered = filterMuscle === "All" ? exercises : exercises.filter((e) => e.muscle === filterMuscle);
+  if (search.trim()) {
+    const q = search.trim().toLowerCase();
+    filtered = filtered.filter((e) => e.name.toLowerCase().includes(q));
+  }
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap">
+          <select
+            value={filterMuscle}
+            onChange={(e) => setFilterMuscle(e.target.value)}
+            className="text-sm px-2 py-1.5 nb-script"
+            style={{ border: `1.5px solid ${INK}`, borderRadius: 3, background: "rgba(255,252,240,0.7)", color: INK }}
+          >
+            <option>All</option>
+            {MUSCLE_GROUPS.map((m) => (
+              <option key={m}>{m}</option>
+            ))}
+          </select>
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search exercises..."
+            className="text-sm px-2 py-1.5 w-44 nb-script"
+            style={{ border: `1.5px solid ${INK}`, borderRadius: 3, background: "rgba(255,252,240,0.7)", color: INK }}
+          />
+          <span className="text-xs nb-script" style={{ color: INK_SOFT }}>{filtered.length} of {exercises.length}</span>
+        </div>
+        <button
+          onClick={() => {
+            setEditing(null);
+            setShowForm(true);
+          }}
+          className="flex items-center gap-1 text-sm px-3 py-1.5 nb-script"
+          style={{ background: INK, color: PAPER_BG, borderRadius: 3 }}
+        >
+          <Plus size={15} /> New exercise
+        </button>
+      </div>
+
+      {showForm && (
+        <ExerciseForm
+          initial={editing}
+          onSave={upsert}
+          onCancel={() => {
+            setShowForm(false);
+            setEditing(null);
+          }}
+        />
+      )}
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3 max-h-[560px] overflow-y-auto pr-1">
+        {filtered.map((ex) => (
+          <PaperCard key={ex.id} className="p-3 flex items-start justify-between">
+            <div>
+              <div className="flex items-center gap-1.5">
+                <p className="font-medium text-sm nb-script" style={{ fontSize: "1.05rem" }}>{ex.name}</p>
+                {ex.isMain && (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded nb-script" style={{ background: "#e8c45a55", color: "#7a5a10", border: "1px solid #c9a23a" }}>
+                    Main lift
+                  </span>
+                )}
+              </div>
+              <p className="text-xs mt-0.5" style={{ color: INK_SOFT }}>
+                {ex.muscle} · {ex.equipment} · {ex.type}
+              </p>
+            </div>
+            <div className="flex gap-0.5">
+              <button
+                onClick={() => {
+                  setEditing(ex);
+                  setShowForm(true);
+                }}
+                className="icon-btn"
+                style={{ color: INK_SOFT }}
+              >
+                <Edit2 size={15} />
+              </button>
+              <button onClick={() => remove(ex.id)} className="icon-btn" style={{ color: INK_SOFT }}>
+                <Trash2 size={15} />
+              </button>
+            </div>
+          </PaperCard>
+        ))}
+        {filtered.length === 0 && <p className="text-sm col-span-2" style={{ color: INK_SOFT }}>No exercises match.</p>}
+      </div>
+    </div>
+  );
+}
+
+function ExerciseForm({ initial, onSave, onCancel }) {
+  const [name, setName] = useState(initial?.name || "");
+  const [muscle, setMuscle] = useState(initial?.muscle || MUSCLE_GROUPS[0]);
+  const [equipment, setEquipment] = useState(initial?.equipment || EQUIPMENT[0]);
+  const [type, setType] = useState(initial?.type || EX_TYPES[0]);
+  const [isMain, setIsMain] = useState(initial?.isMain || false);
+
+  function submit() {
+    if (!name.trim()) return;
+    onSave({ id: initial?.id || uid(), name: name.trim(), muscle, equipment, type, isMain });
+  }
+
+  return (
+    <PaperCard className="p-4 mb-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="sm:col-span-2">
+          <label className="text-xs block mb-1" style={{ color: INK_SOFT }}>Exercise name</label>
+          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Pause Bench Press" className="w-full px-2 py-1.5 text-sm" style={inputStyle()} />
+        </div>
+        <div>
+          <label className="text-xs block mb-1" style={{ color: INK_SOFT }}>Muscle group</label>
+          <select value={muscle} onChange={(e) => setMuscle(e.target.value)} className="w-full px-2 py-1.5 text-sm" style={inputStyle()}>
+            {MUSCLE_GROUPS.map((m) => <option key={m}>{m}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="text-xs block mb-1" style={{ color: INK_SOFT }}>Equipment</label>
+          <select value={equipment} onChange={(e) => setEquipment(e.target.value)} className="w-full px-2 py-1.5 text-sm" style={inputStyle()}>
+            {EQUIPMENT.map((m) => <option key={m}>{m}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="text-xs block mb-1" style={{ color: INK_SOFT }}>Type</label>
+          <select value={type} onChange={(e) => setType(e.target.value)} className="w-full px-2 py-1.5 text-sm" style={inputStyle()}>
+            {EX_TYPES.map((m) => <option key={m}>{m}</option>)}
+          </select>
+        </div>
+        <div className="flex items-center gap-2 pt-5">
+          <input type="checkbox" checked={isMain} onChange={(e) => setIsMain(e.target.checked)} id="ismain" />
+          <label htmlFor="ismain" className="text-sm" style={{ color: INK }}>Track as main lift (1RM trends)</label>
+        </div>
+      </div>
+      <div className="flex gap-2 mt-3 justify-end">
+        <button onClick={onCancel} className="text-sm px-3 py-1.5" style={{ border: `1.5px solid ${INK}`, borderRadius: 3, color: INK }}>Cancel</button>
+        <button onClick={submit} className="text-sm px-3 py-1.5" style={{ background: INK, color: PAPER_BG, borderRadius: 3 }}>Save</button>
+      </div>
+    </PaperCard>
+  );
+}
+
+/* ===================== PROGRAM TAB ===================== */
+
+function ProgramTab({ exercises, setExercises, blocks, setBlocks, updateBlock, savedPrograms, setSavedPrograms }) {
+  const [expandedBlock, setExpandedBlock] = useState(null);
+  const [showBlockForm, setShowBlockForm] = useState(false);
+  const [showProgramPicker, setShowProgramPicker] = useState(false);
+  const [showCustomBuilder, setShowCustomBuilder] = useState(false);
+  const [showSavedPrograms, setShowSavedPrograms] = useState(false);
+  const [showArchived, setShowArchived] = useState(false);
+
+  function addBlock(block) {
+    setBlocks((prev) => [...prev, block]);
+    setShowBlockForm(false);
+    setShowProgramPicker(false);
+    setShowCustomBuilder(false);
+    setShowSavedPrograms(false);
+    setExpandedBlock(block.id);
+  }
+
+  function removeBlock(id) {
+    setBlocks((prev) => prev.filter((b) => b.id !== id));
+  }
+
+  function saveAsTemplate(block) {
+    const template = { ...block, id: uid(), savedAt: todayISO() };
+    setSavedPrograms((prev) => [...prev, template]);
+  }
+
+  function loadSavedProgram(template) {
+    const fresh = { ...template, id: uid(), startDate: todayISO(), templates: template.templates.map((t) => ({ ...t, id: uid() })) };
+    addBlock(fresh);
+  }
+
+  function removeSavedProgram(id) {
+    setSavedPrograms((prev) => prev.filter((p) => p.id !== id));
+  }
+
+  const activeBlocks = blocks.filter((b) => !b.archived);
+  const archivedBlocks = blocks.filter((b) => b.archived);
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
+        <p className="text-sm nb-script" style={{ color: INK_SOFT }}>{activeBlocks.length} active block{activeBlocks.length !== 1 ? "s" : ""}</p>
+        <div className="flex gap-2 flex-wrap">
+          {archivedBlocks.length > 0 && (
+            <button onClick={() => setShowArchived((s) => !s)} className="flex items-center gap-1 text-sm px-3 py-1.5 nb-script" style={{ border: `1.5px solid ${INK_SOFT}`, borderRadius: 3, color: INK_SOFT }}>
+              {showArchived ? "Hide" : "Show"} archived ({archivedBlocks.length})
+            </button>
+          )}
+          {savedPrograms.length > 0 && (
+            <button onClick={() => setShowSavedPrograms(true)} className="flex items-center gap-1 text-sm px-3 py-1.5 nb-script" style={{ border: `1.5px solid ${INK}`, borderRadius: 3, color: INK }}>
+              <Copy size={15} /> My saved programs ({savedPrograms.length})
+            </button>
+          )}
+          <button onClick={() => setShowProgramPicker(true)} className="flex items-center gap-1 text-sm px-3 py-1.5 nb-script" style={{ border: `1.5px solid ${INK}`, borderRadius: 3, color: INK }}>
+            <Sparkles size={15} /> Start from a program
+          </button>
+          <button onClick={() => setShowCustomBuilder(true)} className="flex items-center gap-1 text-sm px-3 py-1.5 nb-script" style={{ border: `1.5px solid ${INK}`, borderRadius: 3, color: INK }}>
+            <Edit2 size={15} /> Custom program
+          </button>
+          <button onClick={() => setShowBlockForm(true)} className="flex items-center gap-1 text-sm px-3 py-1.5 nb-script" style={{ background: INK, color: PAPER_BG, borderRadius: 3 }}>
+            <Plus size={15} /> New blank block
+          </button>
+        </div>
+      </div>
+
+      {showSavedPrograms && (
+        <PaperCard className="p-4 mb-3">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-sm font-medium nb-script" style={{ fontSize: "1.1rem" }}>My saved programs</p>
+            <button onClick={() => setShowSavedPrograms(false)} className="p-1" style={{ color: INK_SOFT }}><X size={15} /></button>
+          </div>
+          <div className="space-y-2">
+            {savedPrograms.map((p) => (
+              <div key={p.id} className="flex items-center justify-between rounded-md p-2.5" style={{ border: "1px solid rgba(59,47,30,0.2)" }}>
+                <div>
+                  <p className="text-sm font-medium nb-script">{p.name}</p>
+                  <p className="text-xs" style={{ color: INK_SOFT }}>{p.templates.length} days · saved {fmtDate(p.savedAt)}</p>
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => loadSavedProgram(p)} className="text-xs px-2.5 py-1" style={{ background: INK, color: PAPER_BG, borderRadius: 3 }}>Use this</button>
+                  <button onClick={() => removeSavedProgram(p.id)} className="p-1" style={{ color: INK_SOFT }}><Trash2 size={14} /></button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </PaperCard>
+      )}
+
+      {showProgramPicker && <ProgramPicker exercises={exercises} onCreate={addBlock} onCancel={() => setShowProgramPicker(false)} />}
+      {showCustomBuilder && <CustomProgramBuilder exercises={exercises} setExercises={setExercises} onCreate={addBlock} onCancel={() => setShowCustomBuilder(false)} />}
+      {showBlockForm && <BlockForm onSave={addBlock} onCancel={() => setShowBlockForm(false)} />}
+
+      <div className="space-y-2">
+        {activeBlocks.map((block) => (
+          <BlockCard
+            key={block.id}
+            block={block}
+            exercises={exercises}
+            setExercises={setExercises}
+            expanded={expandedBlock === block.id}
+            onToggle={() => setExpandedBlock(expandedBlock === block.id ? null : block.id)}
+            onUpdate={(patch) => updateBlock(block.id, patch)}
+            onRemove={() => removeBlock(block.id)}
+            onSaveTemplate={() => saveAsTemplate(block)}
+            onArchiveToggle={() => updateBlock(block.id, { archived: !block.archived })}
+          />
+        ))}
+        {activeBlocks.length === 0 && !showBlockForm && !showProgramPicker && !showCustomBuilder && (
+          <p className="text-sm nb-script" style={{ color: INK_SOFT }}>No active blocks. Start from a program, build a custom one, or open a blank page.</p>
+        )}
+      </div>
+
+      {showArchived && archivedBlocks.length > 0 && (
+        <div className="mt-4">
+          <p className="text-xs mb-2" style={{ color: INK_SOFT }}>Archived (kept for reference, not shown by default):</p>
+          <div className="space-y-2">
+            {archivedBlocks.map((block) => (
+              <BlockCard
+                key={block.id}
+                block={block}
+                exercises={exercises}
+                setExercises={setExercises}
+                expanded={expandedBlock === block.id}
+                onToggle={() => setExpandedBlock(expandedBlock === block.id ? null : block.id)}
+                onUpdate={(patch) => updateBlock(block.id, patch)}
+                onRemove={() => removeBlock(block.id)}
+                onSaveTemplate={() => saveAsTemplate(block)}
+                onArchiveToggle={() => updateBlock(block.id, { archived: !block.archived })}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ProgramPicker({ exercises, onCreate, onCancel }) {
+  const [selected, setSelected] = useState(null);
+  const [mode, setMode] = useState("blank");
+  const [squatTM, setSquatTM] = useState(225);
+  const [benchTM, setBenchTM] = useState(155);
+  const [deadliftTM, setDeadliftTM] = useState(275);
+  const [ohpTM, setOhpTM] = useState(95);
+
+  const def = PROGRAM_DEFS.find((p) => p.id === selected);
+
+  function create() {
+    if (!def) return;
+    if (selected === "531") {
+      const tms = { squat: Number(squatTM), bench: Number(benchTM), deadlift: Number(deadliftTM), ohp: Number(ohpTM) };
+      if (mode === "quickstart") onCreate(quickStart531(exercises, tms));
+      else {
+        const block = blankBlock("5/3/1 Cycle", "Intensity", 4, def.dayNames, "531");
+        block.trainingMaxes = tms;
+        onCreate(block);
+      }
+      return;
+    }
+    if (mode === "quickstart") {
+      if (selected === "5x5") return onCreate(quickStart5x5(exercises));
+      if (selected === "ppl3") return onCreate(quickStartPPL(exercises, false));
+      if (selected === "ppl6") return onCreate(quickStartPPL(exercises, true));
+      if (selected === "upperlower") return onCreate(quickStartUpperLower(exercises));
+      if (selected === "ulppl") {
+        const ul = quickStartUpperLower(exercises);
+        const ppl = quickStartPPL(exercises, false);
+        const block = blankBlock("UL/PPL Hybrid", "Volume", 6, def.dayNames, "ulppl");
+        block.templates[0].exercises = ul.templates[0].exercises;
+        block.templates[1].exercises = ul.templates[1].exercises;
+        block.templates[2].exercises = ppl.templates[0].exercises;
+        block.templates[3].exercises = ppl.templates[1].exercises;
+        block.templates[4].exercises = ppl.templates[2].exercises;
+        return onCreate(block);
+      }
+    }
+    const phase = "Volume";
+    const weeks = selected === "5x5" ? 8 : 6;
+    const programKey = selected === "ppl3" || selected === "ppl6" ? "ppl" : selected;
+    onCreate(blankBlock(def.name, phase, weeks, def.dayNames, programKey));
+  }
+
+  return (
+    <PaperCard className="p-4 mb-3">
+      <p className="text-sm font-medium mb-2 nb-script" style={{ fontSize: "1.1rem" }}>Choose a program</p>
+      <div className="space-y-2 mb-3">
+        {PROGRAM_DEFS.map((p) => (
+          <label
+            key={p.id}
+            className="flex items-start gap-2 p-2.5 cursor-pointer"
+            style={{ border: `1.5px solid ${selected === p.id ? ACCENT : INK}`, borderRadius: 3, background: "rgba(255,252,240,0.7)" }}
+          >
+            <input type="radio" name="program" checked={selected === p.id} onChange={() => setSelected(p.id)} className="mt-1" />
+            <div>
+              <p className="text-sm font-medium nb-script" style={{ fontSize: "1.05rem" }}>{p.name}</p>
+              <p className="text-xs" style={{ color: INK_SOFT }}>{p.desc}</p>
+            </div>
+          </label>
+        ))}
+      </div>
+
+      {def && (
+        <PaperCard className="p-3 mb-3">
+          <p className="text-xs mb-2" style={{ color: INK_SOFT }}>How should the days be filled in?</p>
+          <div className="flex gap-2 mb-3">
+            <button onClick={() => setMode("blank")} className="text-xs px-2.5 py-1.5 nb-script" style={{ border: `1.5px solid ${INK}`, borderRadius: 3, background: mode === "blank" ? INK : "transparent", color: mode === "blank" ? PAPER_BG : INK }}>
+              Build from scratch ({def.dayNames.length} blank days)
+            </button>
+            <button onClick={() => setMode("quickstart")} className="text-xs px-2.5 py-1.5 nb-script" style={{ border: `1.5px solid ${INK}`, borderRadius: 3, background: mode === "quickstart" ? INK : "transparent", color: mode === "quickstart" ? PAPER_BG : INK }}>
+              Quick-start (pre-filled)
+            </button>
+          </div>
+
+          {selected === "531" && (
+            <div>
+              <p className="text-xs mb-2" style={{ color: INK_SOFT }}>
+                Enter training maxes (convention: ~90% of true 1RM). These apply to any 5/3/1-mode exercise in this block, and percentages auto-advance weekly from today's date.
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <div><label className="text-[10px] block mb-0.5" style={{ color: INK_SOFT }}>Squat TM</label><input type="number" value={squatTM} onChange={(e) => setSquatTM(e.target.value)} className="w-full px-2 py-1 text-xs" style={inputStyle()} /></div>
+                <div><label className="text-[10px] block mb-0.5" style={{ color: INK_SOFT }}>Bench TM</label><input type="number" value={benchTM} onChange={(e) => setBenchTM(e.target.value)} className="w-full px-2 py-1 text-xs" style={inputStyle()} /></div>
+                <div><label className="text-[10px] block mb-0.5" style={{ color: INK_SOFT }}>Deadlift TM</label><input type="number" value={deadliftTM} onChange={(e) => setDeadliftTM(e.target.value)} className="w-full px-2 py-1 text-xs" style={inputStyle()} /></div>
+                <div><label className="text-[10px] block mb-0.5" style={{ color: INK_SOFT }}>OHP TM</label><input type="number" value={ohpTM} onChange={(e) => setOhpTM(e.target.value)} className="w-full px-2 py-1 text-xs" style={inputStyle()} /></div>
+              </div>
+            </div>
+          )}
+        </PaperCard>
+      )}
+
+      <div className="flex gap-2 justify-end">
+        <button onClick={onCancel} className="text-sm px-3 py-1.5" style={{ border: `1.5px solid ${INK}`, borderRadius: 3, color: INK }}>Cancel</button>
+        <button onClick={create} disabled={!selected} className="text-sm px-3 py-1.5" style={{ background: INK, color: PAPER_BG, borderRadius: 3, opacity: selected ? 1 : 0.4 }}>Create block</button>
+      </div>
+    </PaperCard>
+  );
+}
+
+function findExIdFuzzy(exercises, name) {
+  const clean = name.trim().toLowerCase();
+  let found = exercises.find((e) => e.name.toLowerCase() === clean);
+  if (found) return { id: found.id, isNew: false, matchedName: found.name };
+  found = exercises.find((e) => e.name.toLowerCase().includes(clean) || clean.includes(e.name.toLowerCase()));
+  if (found) return { id: found.id, isNew: false, matchedName: found.name };
+  return { id: null, isNew: true, matchedName: null };
+}
+
+function ExerciseCombobox({ exercises, setExercises, value, onChange, placeholder = "Search exercises..." }) {
+  const [query, setQuery] = useState("");
+  const [open, setOpen] = useState(false);
+  const wrapRef = useRef(null);
+
+  const selected = exercises.find((e) => e.id === value);
+
+  useEffect(() => {
+    function onClickOutside(e) {
+      if (wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false);
+    }
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, []);
+
+  const q = query.trim().toLowerCase();
+  const filtered = q ? exercises.filter((e) => e.name.toLowerCase().includes(q)) : exercises;
+  const exactMatch = exercises.some((e) => e.name.toLowerCase() === q);
+
+  function selectExercise(ex) {
+    onChange(ex.id);
+    setQuery("");
+    setOpen(false);
+  }
+
+  function createAndSelect() {
+    if (!query.trim()) return;
+    const newEx = { id: uid(), name: query.trim(), muscle: MUSCLE_GROUPS[0], equipment: "Other", type: "Compound", isMain: false };
+    setExercises((prev) => [...prev, newEx]);
+    onChange(newEx.id);
+    setQuery("");
+    setOpen(false);
+  }
+
+  return (
+    <div className="relative" ref={wrapRef}>
+      <input
+        value={open ? query : (selected?.name || "")}
+        onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
+        onFocus={() => { setQuery(""); setOpen(true); }}
+        placeholder={placeholder}
+        className="w-full px-1.5 py-1 text-xs"
+        style={inputStyle()}
+      />
+      {open && (
+        <div
+          className="absolute z-20 mt-0.5 w-full max-h-48 overflow-y-auto rounded-md"
+          style={{ background: "#fffcf0", border: `1.5px solid ${INK}`, boxShadow: "2px 3px 0 rgba(59,47,30,0.15)" }}
+        >
+          {filtered.slice(0, 50).map((ex) => (
+            <button
+              key={ex.id}
+              onClick={() => selectExercise(ex)}
+              className="block w-full text-left px-2 py-1.5 text-xs hover:bg-black/5"
+              style={{ color: INK }}
+            >
+              {ex.name} <span style={{ color: INK_SOFT }}>· {ex.muscle}</span>
+            </button>
+          ))}
+          {filtered.length === 0 && <p className="px-2 py-1.5 text-xs" style={{ color: INK_SOFT }}>No matches.</p>}
+          {query.trim() && !exactMatch && (
+            <button
+              onClick={createAndSelect}
+              className="block w-full text-left px-2 py-1.5 text-xs border-t"
+              style={{ color: ACCENT, borderColor: "rgba(59,47,30,0.15)", fontWeight: 600 }}
+            >
+              <Plus size={11} className="inline mr-1" /> Create "{query.trim()}"
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function parseProgramText(text, exercises) {
+  const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
+  const days = [];
+  let current = null;
+  const unmatched = [];
+
+  const exerciseLineRe = /^(.+?)\s+(\d+)\s*[x×]\s*([\d\-+]+)(?:\s*@\s*(\d+(?:\.\d)?))?(?:\s*[,@]?\s*(\d+)\s*lbs?)?/i;
+
+  lines.forEach((line) => {
+    const m = line.match(exerciseLineRe);
+    if (m) {
+      const rawName = m[1];
+      const sets = m[2];
+      const reps = m[3];
+      const rpe = m[4];
+      const weight = m[5];
+      if (!current) {
+        current = { id: uid(), name: `Day ${days.length + 1}`, exercises: [] };
+        days.push(current);
+      }
+      const match = findExIdFuzzy(exercises, rawName);
+      if (match.isNew) unmatched.push(rawName.trim());
+      current.exercises.push({
+        exerciseId: match.id,
+        mode: "plain",
+        sets: Number(sets) || 1,
+        repRange: reps || "",
+        targetRpe: rpe || "",
+        targetWeight: weight || "",
+        _rawName: match.isNew ? rawName.trim() : null,
+      });
+    } else {
+      const cleanedHeader = line.replace(/:$/, "").trim();
+      if (cleanedHeader) {
+        current = { id: uid(), name: cleanedHeader, exercises: [] };
+        days.push(current);
+      }
+    }
+  });
+
+  return { days: days.filter((d) => d.exercises.length > 0), unmatched: Array.from(new Set(unmatched)) };
+}
+
+function CustomProgramBuilder({ exercises, setExercises, onCreate, onCancel }) {
+  const [mode, setMode] = useState("scratch");
+  const [name, setName] = useState("My Custom Program");
+  const [weeks, setWeeks] = useState(6);
+  const [phase, setPhase] = useState("Volume");
+  const [pasteText, setPasteText] = useState("");
+  const [parsedDays, setParsedDays] = useState(null);
+  const [unmatched, setUnmatched] = useState([]);
+
+  function handleParse() {
+    const result = parseProgramText(pasteText, exercises);
+    setParsedDays(result.days);
+    setUnmatched(result.unmatched);
+  }
+
+  function confirmParsed() {
+    let workingExercises = exercises;
+    const createdMap = {};
+    unmatched.forEach((rawName) => {
+      const newEx = { id: uid(), name: rawName, muscle: MUSCLE_GROUPS[0], equipment: "Other", type: "Compound", isMain: false };
+      createdMap[rawName] = newEx.id;
+      workingExercises = [...workingExercises, newEx];
+    });
+    if (unmatched.length > 0) setExercises(workingExercises);
+
+    const finalDays = parsedDays.map((d) => ({
+      ...d,
+      exercises: d.exercises.map((te) => ({
+        exerciseId: te.exerciseId || createdMap[te._rawName],
+        mode: te.mode,
+        sets: te.sets,
+        repRange: te.repRange,
+        targetRpe: te.targetRpe,
+        targetWeight: te.targetWeight,
+        tmLift: "squat",
+      })),
+    }));
+
+    onCreate({
+      id: uid(),
+      name: name.trim() || "My Custom Program",
+      phase,
+      weeks: Number(weeks) || 1,
+      startDate: todayISO(),
+      trainingMaxes: { squat: "", bench: "", deadlift: "", ohp: "" },
+      templates: finalDays,
+    });
+  }
+
+  function createBlankScratch() {
+    onCreate({
+      id: uid(),
+      name: name.trim() || "My Custom Program",
+      phase,
+      weeks: Number(weeks) || 1,
+      startDate: todayISO(),
+      trainingMaxes: { squat: "", bench: "", deadlift: "", ohp: "" },
+      templates: [],
+    });
+  }
+
+  return (
+    <PaperCard className="p-4 mb-3">
+      <p className="text-sm font-medium mb-2 nb-script" style={{ fontSize: "1.1rem" }}>Custom program</p>
+
+      <div className="flex gap-2 mb-3">
+        <button onClick={() => setMode("scratch")} className="text-xs px-2.5 py-1.5 nb-script" style={{ border: `1.5px solid ${INK}`, borderRadius: 3, background: mode === "scratch" ? INK : "transparent", color: mode === "scratch" ? PAPER_BG : INK }}>
+          Build from scratch
+        </button>
+        <button onClick={() => setMode("paste")} className="text-xs px-2.5 py-1.5 nb-script" style={{ border: `1.5px solid ${INK}`, borderRadius: 3, background: mode === "paste" ? INK : "transparent", color: mode === "paste" ? PAPER_BG : INK }}>
+          Paste / describe a program
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+        <div className="sm:col-span-2">
+          <label className="text-xs block mb-1" style={{ color: INK_SOFT }}>Program name</label>
+          <input value={name} onChange={(e) => setName(e.target.value)} className="w-full px-2 py-1.5 text-sm" style={inputStyle()} />
+        </div>
+        <div>
+          <label className="text-xs block mb-1" style={{ color: INK_SOFT }}>Weeks</label>
+          <input type="number" min={1} value={weeks} onChange={(e) => setWeeks(e.target.value)} className="w-full px-2 py-1.5 text-sm" style={inputStyle()} />
+        </div>
+        <div className="sm:col-span-3">
+          <label className="text-xs block mb-1" style={{ color: INK_SOFT }}>Phase</label>
+          <div className="flex gap-2">
+            {["Volume", "Intensity", "Peak", "Deload"].map((p) => (
+              <button key={p} onClick={() => setPhase(p)} className="text-xs px-2.5 py-1" style={{ border: `1.5px solid ${INK}`, borderRadius: 3, background: phase === p ? INK : "transparent", color: phase === p ? PAPER_BG : INK }}>{p}</button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {mode === "scratch" ? (
+        <p className="text-xs mb-3" style={{ color: INK_SOFT }}>
+          This creates the program with no days yet — you'll build each day and its exercises afterward in the block view, same as any other block.
+        </p>
+      ) : (
+        <div className="mb-3">
+          <label className="text-xs block mb-1" style={{ color: INK_SOFT }}>
+            Paste or describe your program. One day header per line, then exercises below it like "Bench Press 4x8 @8" or "Squat 3x5 225lbs".
+          </label>
+          <textarea
+            value={pasteText}
+            onChange={(e) => setPasteText(e.target.value)}
+            rows={8}
+            placeholder={"Day 1: Push\nBench Press 4x8 @8\nOverhead Press 3x10\nTriceps Pushdown 3x12\n\nDay 2: Pull\nBarbell Row 4x8\nLat Pulldown 3x10"}
+            className="w-full px-2 py-2 text-sm"
+            style={{ ...inputStyle(), fontFamily: "'Kalam', cursive" }}
+          />
+          <button onClick={handleParse} disabled={!pasteText.trim()} className="text-xs px-3 py-1.5 mt-2 nb-script" style={{ background: INK, color: PAPER_BG, borderRadius: 3, opacity: pasteText.trim() ? 1 : 0.4 }}>
+            Parse program
+          </button>
+
+          {parsedDays && (
+            <div className="mt-3 rounded-md p-2.5" style={{ background: "rgba(139,107,58,0.07)", border: `1px solid rgba(59,47,30,0.2)` }}>
+              <p className="text-xs mb-1.5" style={{ color: INK_SOFT }}>
+                Parsed {parsedDays.length} day{parsedDays.length !== 1 ? "s" : ""}. Review below, then confirm to create the block (you can edit anything afterward).
+              </p>
+              {parsedDays.length === 0 && <p className="text-xs" style={{ color: ACCENT }}>Couldn't find any exercise lines — try the format "Exercise Name 3x8".</p>}
+              <div className="space-y-2">
+                {parsedDays.map((d, di) => (
+                  <div key={di} className="text-xs" style={{ color: INK }}>
+                    <span className="font-medium nb-script">{d.name}</span>
+                    <ul className="ml-3">
+                      {d.exercises.map((te, ei) => (
+                        <li key={ei} style={{ color: te._rawName ? ACCENT : INK_SOFT }}>
+                          {te._rawName ? `"${te._rawName}" (new exercise)` : (exercises.find((e) => e.id === te.exerciseId)?.name || "Unknown")} — {te.sets}×{te.repRange}{te.targetRpe ? ` @${te.targetRpe}` : ""}{te.targetWeight ? ` (${te.targetWeight} lbs)` : ""}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+              {unmatched.length > 0 && (
+                <p className="text-[11px] mt-2" style={{ color: ACCENT }}>
+                  {unmatched.length} exercise{unmatched.length !== 1 ? "s" : ""} not found in your library will be added automatically when you confirm.
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      <div className="flex gap-2 justify-end mt-3">
+        <button onClick={onCancel} className="text-sm px-3 py-1.5" style={{ border: `1.5px solid ${INK}`, borderRadius: 3, color: INK }}>Cancel</button>
+        {mode === "scratch" ? (
+          <button onClick={createBlankScratch} className="text-sm px-3 py-1.5" style={{ background: INK, color: PAPER_BG, borderRadius: 3 }}>Create program</button>
+        ) : (
+          <button onClick={confirmParsed} disabled={!parsedDays || parsedDays.length === 0} className="text-sm px-3 py-1.5" style={{ background: INK, color: PAPER_BG, borderRadius: 3, opacity: parsedDays && parsedDays.length > 0 ? 1 : 0.4 }}>
+            Confirm &amp; create
+          </button>
+        )}
+      </div>
+    </PaperCard>
+  );
+}
+
+function BlockForm({ initial, onSave, onCancel }) {
+  const [name, setName] = useState(initial?.name || "");
+  const [phase, setPhase] = useState(initial?.phase || "Volume");
+  const [weeks, setWeeks] = useState(initial?.weeks || 4);
+
+  function submit() {
+    if (!name.trim()) return;
+    onSave({
+      id: initial?.id || uid(),
+      name: name.trim(),
+      phase,
+      weeks: Number(weeks) || 1,
+      startDate: todayISO(),
+      trainingMaxes: { squat: "", bench: "", deadlift: "", ohp: "" },
+      templates: initial?.templates || [],
+    });
+  }
+
+  return (
+    <PaperCard className="p-4 mb-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="sm:col-span-2">
+          <label className="text-xs block mb-1" style={{ color: INK_SOFT }}>Block name</label>
+          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Hypertrophy block 1" className="w-full px-2 py-1.5 text-sm" style={inputStyle()} />
+        </div>
+        <div>
+          <label className="text-xs block mb-1" style={{ color: INK_SOFT }}>Weeks</label>
+          <input type="number" min={1} value={weeks} onChange={(e) => setWeeks(e.target.value)} className="w-full px-2 py-1.5 text-sm" style={inputStyle()} />
+        </div>
+        <div className="sm:col-span-3">
+          <label className="text-xs block mb-1" style={{ color: INK_SOFT }}>Phase</label>
+          <div className="flex gap-2">
+            {["Volume", "Intensity", "Peak", "Deload"].map((p) => (
+              <button key={p} onClick={() => setPhase(p)} className="text-xs px-2.5 py-1" style={{ border: `1.5px solid ${INK}`, borderRadius: 3, background: phase === p ? INK : "transparent", color: phase === p ? PAPER_BG : INK }}>{p}</button>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div className="flex gap-2 mt-3 justify-end">
+        <button onClick={onCancel} className="text-sm px-3 py-1.5" style={{ border: `1.5px solid ${INK}`, borderRadius: 3, color: INK }}>Cancel</button>
+        <button onClick={submit} className="text-sm px-3 py-1.5" style={{ background: INK, color: PAPER_BG, borderRadius: 3 }}>Save</button>
+      </div>
+    </PaperCard>
+  );
+}
+
+const PHASE_COLOR = {
+  Volume: { bg: "#dce8e0", text: "#2d5240" },
+  Intensity: { bg: "#f0ddb8", text: "#7a5a10" },
+  Peak: { bg: "#f0c9c0", text: "#8a3324" },
+  Deload: { bg: "#d9e4ee", text: "#2d4a5a" },
+};
+
+function BlockCard({ block, exercises, setExercises, expanded, onToggle, onUpdate, onRemove, onSaveTemplate, onArchiveToggle }) {
+  const [showTemplateForm, setShowTemplateForm] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState(null);
+  const [showTMEdit, setShowTMEdit] = useState(false);
+  const [showCycleInfo, setShowCycleInfo] = useState(false);
+  const [renaming, setRenaming] = useState(false);
+  const [nameInput, setNameInput] = useState(block.name);
+  const [showExport, setShowExport] = useState(false);
+  const [showNotes, setShowNotes] = useState(!!block.notes);
+
+  function saveTemplate(t) {
+    const exists = block.templates.some((x) => x.id === t.id);
+    const templates = exists ? block.templates.map((x) => (x.id === t.id ? t : x)) : [...block.templates, t];
+    onUpdate({ templates });
+    setShowTemplateForm(false);
+    setEditingTemplate(null);
+  }
+
+  function removeTemplate(id) {
+    onUpdate({ templates: block.templates.filter((t) => t.id !== id) });
+  }
+
+  function duplicateTemplate(t) {
+    const copy = { ...t, id: uid(), name: `${t.name} (copy)`, exercises: t.exercises.map((e) => ({ ...e })) };
+    const idx = block.templates.findIndex((x) => x.id === t.id);
+    const newTemplates = [...block.templates];
+    newTemplates.splice(idx + 1, 0, copy);
+    onUpdate({ templates: newTemplates });
+  }
+
+  function moveTemplate(idx, dir) {
+    const newIdx = idx + dir;
+    if (newIdx < 0 || newIdx >= block.templates.length) return;
+    const newTemplates = [...block.templates];
+    [newTemplates[idx], newTemplates[newIdx]] = [newTemplates[newIdx], newTemplates[idx]];
+    onUpdate({ templates: newTemplates });
+  }
+
+  function addBlankDay() {
+    onUpdate({ templates: [...block.templates, { id: uid(), name: `Day ${block.templates.length + 1}`, exercises: [] }] });
+  }
+
+  function commitRename() {
+    if (nameInput.trim()) onUpdate({ name: nameInput.trim() });
+    setRenaming(false);
+  }
+
+  function exportText() {
+    const lines = [];
+    block.templates.forEach((t) => {
+      lines.push(`${t.name}:`);
+      t.exercises.forEach((te) => {
+        const exo = exercises.find((e) => e.id === te.exerciseId);
+        if (te.mode === "531") {
+          lines.push(`${exo?.name || "Unknown"} 3x5 (5/3/1 vs ${TM_LIFTS.find((l) => l.key === te.tmLift)?.label} TM)`);
+        } else {
+          let line = `${exo?.name || "Unknown"} ${te.sets}x${te.repRange || "?"}`;
+          if (te.targetRpe) line += ` @${te.targetRpe}`;
+          if (te.targetWeight) line += ` ${te.targetWeight}lbs`;
+          lines.push(line);
+        }
+      });
+      lines.push("");
+    });
+    return lines.join("\n").trim();
+  }
+
+  const hasAny531 = block.templates.some((t) => t.exercises.some((e) => e.mode === "531"));
+  const cycleInfo = hasAny531 ? cycleInfoForBlock(block, todayISO()) : null;
+  const pc = PHASE_COLOR[block.phase] || { bg: "#eee", text: "#555" };
+
+  return (
+    <PaperCard>
+      <div className="flex items-center justify-between px-3 py-2.5">
+        <div className="flex items-center gap-2 flex-wrap flex-1 cursor-pointer" onClick={() => !renaming && onToggle()}>
+          {expanded ? <ChevronDown size={15} style={{ color: INK_SOFT }} /> : <ChevronRight size={15} style={{ color: INK_SOFT }} />}
+          {renaming ? (
+            <input
+              autoFocus
+              value={nameInput}
+              onChange={(e) => setNameInput(e.target.value)}
+              onClick={(e) => e.stopPropagation()}
+              onKeyDown={(e) => e.key === "Enter" && commitRename()}
+              onBlur={commitRename}
+              className="text-sm px-1 py-0.5 nb-script"
+              style={{ ...inputStyle(), fontSize: "1.1rem" }}
+            />
+          ) : (
+            <p className="text-sm font-medium nb-script" style={{ fontSize: "1.1rem" }}>{block.name}</p>
+          )}
+          <span className="text-[10px] px-1.5 py-0.5 rounded nb-script" style={{ background: pc.bg, color: pc.text }}>{block.phase}</span>
+          <span className="text-xs" style={{ color: INK_SOFT }}>{block.weeks}wk</span>
+          {block.archived && (
+            <span className="text-[10px] px-1.5 py-0.5 rounded nb-script" style={{ background: "#d9e4d9", color: "#3f6b3f" }}>Archived</span>
+          )}
+          {hasAny531 && cycleInfo && (
+            <span className="text-[10px] px-1.5 py-0.5 rounded nb-script" style={{ background: "#e8c0d8", color: "#7a2d55" }}>
+              5/3/1: cycle {cycleInfo.cycleNumber}, week {cycleInfo.cycleWeek}
+            </span>
+          )}
+        </div>
+        <div className="flex gap-1">
+          <button
+            onClick={(e) => { e.stopPropagation(); setNameInput(block.name); setRenaming(true); }}
+            className="icon-btn"
+            style={{ color: INK_SOFT }}
+            title="Rename"
+          >
+            <Edit2 size={15} />
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); onSaveTemplate(); }}
+            className="icon-btn"
+            style={{ color: INK_SOFT }}
+            title="Save as reusable template"
+          >
+            <Copy size={15} />
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); onArchiveToggle(); }}
+            className="icon-btn"
+            style={{ color: block.archived ? "#3f6b3f" : INK_SOFT }}
+            title={block.archived ? "Restore to active" : "Archive (mark complete)"}
+          >
+            <Check size={15} />
+          </button>
+          <button onClick={(e) => { e.stopPropagation(); onRemove(); }} className="icon-btn" style={{ color: INK_SOFT }}>
+            <Trash2 size={15} />
+          </button>
+        </div>
+      </div>
+
+      {expanded && (
+        <div className="px-3 py-3" style={{ borderTop: `1px solid ${INK}` }}>
+          {block.progressionNote && <p className="text-xs rounded-md p-2 mb-3" style={{ color: INK_SOFT, background: "rgba(139,107,58,0.08)" }}>{block.progressionNote}</p>}
+
+          <div className="flex gap-2 mb-3 flex-wrap">
+            <button onClick={() => setShowNotes((s) => !s)} className="flex items-center gap-1 text-xs px-2 py-1" style={{ border: `1.5px solid ${INK_SOFT}`, borderRadius: 3, color: INK_SOFT }}>
+              <Edit2 size={11} /> {block.notes ? "Edit notes" : "Add notes"}
+            </button>
+            <button onClick={() => setShowExport((s) => !s)} className="flex items-center gap-1 text-xs px-2 py-1" style={{ border: `1.5px solid ${INK_SOFT}`, borderRadius: 3, color: INK_SOFT }}>
+              <Copy size={11} /> {showExport ? "Hide" : "Export"} as text
+            </button>
+          </div>
+
+          {showNotes && (
+            <div className="mb-3">
+              <textarea
+                value={block.notes || ""}
+                onChange={(e) => onUpdate({ notes: e.target.value })}
+                placeholder="Tweaks, cues, things to remember for this program..."
+                rows={3}
+                className="w-full px-2 py-1.5 text-sm"
+                style={{ ...inputStyle(), fontFamily: "'Kalam', cursive" }}
+              />
+            </div>
+          )}
+
+          {showExport && (
+            <div className="mb-3 rounded-md p-2.5" style={{ background: "rgba(139,107,58,0.07)", border: "1px solid rgba(59,47,30,0.2)" }}>
+              <p className="text-xs mb-1.5" style={{ color: INK_SOFT }}>Copy this and send it to anyone — they can paste it into "Custom program → Paste / describe a program" to rebuild it.</p>
+              <textarea readOnly value={exportText()} rows={6} className="w-full px-2 py-1.5 text-xs" style={{ ...inputStyle(), fontFamily: "monospace" }} onClick={(e) => e.target.select()} />
+            </div>
+          )}
+
+          {hasAny531 && (
+            <div className="rounded-md p-2.5 mb-3" style={{ background: "#f1e3ec", border: "1px solid #d9b8cc" }}>
+              <div className="flex items-center justify-between">
+                <p className="text-xs" style={{ color: "#7a2d55" }}>
+                  Training maxes — Squat {block.trainingMaxes?.squat || "–"} · Bench {block.trainingMaxes?.bench || "–"} · Deadlift {block.trainingMaxes?.deadlift || "–"} · OHP {block.trainingMaxes?.ohp || "–"}
+                </p>
+                <button onClick={() => setShowTMEdit((s) => !s)} className="text-[11px] underline" style={{ color: "#7a2d55" }}>{showTMEdit ? "Close" : "Edit"}</button>
+              </div>
+              {showTMEdit && <TMEditForm block={block} onSave={(tms) => { onUpdate({ trainingMaxes: tms }); setShowTMEdit(false); }} />}
+              <button onClick={() => setShowCycleInfo((s) => !s)} className="text-[11px] underline mt-1.5" style={{ color: "#7a2d55" }}>{showCycleInfo ? "Hide" : "View"} 4-week % breakdown</button>
+              {showCycleInfo && (
+                <div className="mt-2 space-y-1">
+                  {FIVE31_WEEKS.map((w, i) => (
+                    <p key={i} className="text-[11px]" style={{ color: "#7a2d55" }}><span className="font-medium">{w.label}:</span> {w.pcts.map((p, j) => `${p}%×${w.reps[j]}`).join(", ")}</p>
+                  ))}
+                </div>
+              )}
+              <NewCyclePrompt block={block} onUpdate={onUpdate} />
+            </div>
+          )}
+
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs" style={{ color: INK_SOFT }}>{block.templates.length} day templates</p>
+            <button onClick={addBlankDay} className="flex items-center gap-1 text-xs px-2 py-1" style={{ border: `1.5px solid ${INK}`, borderRadius: 3, color: INK }}>
+              <Plus size={12} /> Add blank day
+            </button>
+          </div>
+
+          {showTemplateForm && (
+            <TemplateForm
+              exercises={exercises}
+              setExercises={setExercises}
+              initial={editingTemplate}
+              onSave={saveTemplate}
+              onCancel={() => { setShowTemplateForm(false); setEditingTemplate(null); }}
+            />
+          )}
+
+          <div className="space-y-2 mt-2">
+            {block.templates.map((t, idx) => {
+              const restHours = muscleRestHoursToNextDay(block, exercises, idx);
+              const warningMuscles = Object.entries(restHours).filter(([, h]) => h !== null && h < 48);
+              return (
+                <div key={t.id} className="rounded-md p-2.5" style={{ background: "rgba(139,107,58,0.06)", border: `1px solid rgba(59,47,30,0.2)` }}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-sm font-medium nb-script" style={{ fontSize: "1.05rem" }}>{t.name}</p>
+                      <span className="text-[10px]" style={{ color: INK_SOFT }}>#{idx + 1}</span>
+                    </div>
+                    <div className="flex gap-0.5 flex-wrap">
+                      <button onClick={() => moveTemplate(idx, -1)} disabled={idx === 0} className="icon-btn" style={{ color: INK_SOFT, opacity: idx === 0 ? 0.3 : 1 }} title="Move earlier"><ChevronLeft size={15} /></button>
+                      <button onClick={() => moveTemplate(idx, 1)} disabled={idx === block.templates.length - 1} className="icon-btn" style={{ color: INK_SOFT, opacity: idx === block.templates.length - 1 ? 0.3 : 1 }} title="Move later"><ChevronRight size={15} /></button>
+                      <button onClick={() => duplicateTemplate(t)} className="icon-btn" style={{ color: INK_SOFT }} title="Duplicate day"><Copy size={15} /></button>
+                      <button onClick={() => { setEditingTemplate(t); setShowTemplateForm(true); }} className="icon-btn" style={{ color: INK_SOFT }}><Edit2 size={15} /></button>
+                      <button onClick={() => removeTemplate(t.id)} className="icon-btn" style={{ color: INK_SOFT }}><Trash2 size={15} /></button>
+                    </div>
+                  </div>
+                  {t.exercises.length === 0 ? (
+                    <p className="text-xs mt-1" style={{ color: INK_SOFT }}>No exercises yet — click edit to build this day.</p>
+                  ) : (
+                    <>
+                      <ul className="mt-1.5 space-y-0.5">
+                        {t.exercises.map((te, i) => {
+                          const exo = exercises.find((e) => e.id === te.exerciseId);
+                          if (te.mode === "531") {
+                            const resolved = resolve531Row(te, block, todayISO());
+                            return (
+                              <li key={i} className="text-xs" style={{ color: INK_SOFT }}>
+                                <span style={{ color: "#7a2d55" }} className="font-medium">[5/3/1 {TM_LIFTS.find((l) => l.key === te.tmLift)?.label}]</span>{" "}
+                                {exo?.name || "Unknown"} — {resolved.weekLabel}: {resolved.sets.map((s) => `${s.weight ?? "?"}×${s.reps}`).join(", ")}
+                              </li>
+                            );
+                          }
+                          return (
+                            <li key={i} className="text-xs" style={{ color: INK_SOFT }}>
+                              {exo?.name || "Unknown exercise"} — {te.sets}×{te.repRange}{te.targetRpe ? ` @RPE ${te.targetRpe}` : ""}{te.targetWeight ? ` (${te.targetWeight} lbs)` : ""}
+                            </li>
+                          );
+                        })}
+                      </ul>
+                      {block.templates.length > 1 && (
+                        <div className="mt-2 pt-2" style={{ borderTop: "1px dashed rgba(59,47,30,0.2)" }}>
+                          <p className="text-[10px] mb-1" style={{ color: INK_SOFT }}>Rest before these muscles train again (next time in cycle):</p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {Object.entries(restHours).map(([muscle, hours]) => (
+                              <span
+                                key={muscle}
+                                className="text-[10px] px-1.5 py-0.5 rounded"
+                                style={{
+                                  background: hours !== null && hours < 48 ? "#f0c9c0" : "rgba(139,107,58,0.1)",
+                                  color: hours !== null && hours < 48 ? "#8a3324" : INK_SOFT,
+                                  fontWeight: hours !== null && hours < 48 ? 700 : 400,
+                                }}
+                              >
+                                {muscle}: {hours === null ? "no repeat in cycle" : `${hours}h`}
+                              </span>
+                            ))}
+                          </div>
+                          {warningMuscles.length > 0 && (
+                            <p className="text-[10px] mt-1.5 flex items-center gap-1" style={{ color: "#8a3324" }}>
+                              <AlertTriangle size={11} /> {warningMuscles.map(([m]) => m).join(", ")} {warningMuscles.length === 1 ? "gets" : "get"} under 48h rest before training again.
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              );
+            })}
+            {block.templates.length === 0 && !showTemplateForm && <p className="text-xs" style={{ color: INK_SOFT }}>No day templates yet.</p>}
+          </div>
+        </div>
+      )}
+    </PaperCard>
+  );
+}
+
+function TMEditForm({ block, onSave }) {
+  const [tms, setTms] = useState({
+    squat: block.trainingMaxes?.squat || "",
+    bench: block.trainingMaxes?.bench || "",
+    deadlift: block.trainingMaxes?.deadlift || "",
+    ohp: block.trainingMaxes?.ohp || "",
+  });
+  return (
+    <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2">
+      {TM_LIFTS.map((l) => (
+        <div key={l.key}>
+          <label className="text-[10px] block mb-0.5" style={{ color: "#7a2d55" }}>{l.label} TM</label>
+          <input type="number" value={tms[l.key]} onChange={(e) => setTms((p) => ({ ...p, [l.key]: e.target.value }))} className="w-full px-2 py-1 text-xs" style={{ border: "1px solid #d9b8cc", borderRadius: 3 }} />
+        </div>
+      ))}
+      <button onClick={() => onSave(tms)} className="col-span-2 sm:col-span-4 text-xs rounded-md py-1 mt-1" style={{ background: "#7a2d55", color: "#fff" }}>Save training maxes</button>
+    </div>
+  );
+}
+
+function NewCyclePrompt({ block, onUpdate }) {
+  const { cycleNumber, cycleWeek } = cycleInfoForBlock(block, todayISO());
+  const [dismissedCycle, setDismissedCycle] = useState(null);
+
+  if (cycleNumber <= 1 || cycleWeek !== 1 || dismissedCycle === cycleNumber) return null;
+
+  function applySuggested() {
+    const tms = block.trainingMaxes || {};
+    const next = {};
+    TM_LIFTS.forEach((l) => {
+      const cur = Number(tms[l.key]) || 0;
+      next[l.key] = cur ? String(cur + (l.isLower ? 10 : 5)) : tms[l.key];
+    });
+    onUpdate({ trainingMaxes: next });
+    setDismissedCycle(cycleNumber);
+  }
+
+  return (
+    <div className="mt-2 rounded-md p-2" style={{ border: "1px solid #d9b8cc", background: "rgba(255,252,240,0.7)" }}>
+      <p className="text-[11px] mb-1.5" style={{ color: "#7a2d55" }}>
+        You've rolled into cycle {cycleNumber} — new training maxes? Convention is +5 lbs upper body lifts, +10 lbs lower body lifts.
+      </p>
+      <div className="flex gap-2">
+        <button onClick={applySuggested} className="text-[11px] px-2 py-1 rounded-md" style={{ background: "#7a2d55", color: "#fff" }}>Apply suggested increase</button>
+        <button onClick={() => setDismissedCycle(cycleNumber)} className="text-[11px] px-2 py-1 rounded-md" style={{ border: "1px solid #d9b8cc", color: "#7a2d55" }}>I'll set my own / keep as-is</button>
+      </div>
+    </div>
+  );
+}
+
+function TemplateForm({ exercises, setExercises, initial, onSave, onCancel }) {
+  const [name, setName] = useState(initial?.name || "");
+  const [rows, setRows] = useState(initial?.exercises?.map((r) => ({ ...blankRow(exercises), ...r, key: uid() })) || []);
+
+  function addRow() { setRows((r) => [...r, { ...blankRow(exercises), key: uid() }]); }
+  function removeRow(key) { setRows((r) => r.filter((x) => x.key !== key)); }
+  function updateRow(key, patch) { setRows((r) => r.map((x) => (x.key === key ? { ...x, ...patch } : x))); }
+
+  function submit() {
+    if (!name.trim()) return;
+    onSave({ id: initial?.id || uid(), name: name.trim(), exercises: rows.map(({ key, ...rest }) => rest) });
+  }
+
+  return (
+    <PaperCard className="p-3 mb-2">
+      <label className="text-xs block mb-1" style={{ color: INK_SOFT }}>Day name</label>
+      <input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Day 1 — Squat focus" className="w-full px-2 py-1.5 text-sm mb-3" style={inputStyle()} />
+
+      <div className="space-y-2">
+        {rows.map((row) => (
+          <div key={row.key} className="rounded-md p-2" style={{ border: "1px solid rgba(59,47,30,0.2)" }}>
+            <div className="flex flex-wrap items-end gap-2 mb-1.5">
+              <div className="flex-1 min-w-[160px]">
+                <label className="text-[10px] block mb-0.5" style={{ color: INK_SOFT }}>Exercise</label>
+                <ExerciseCombobox exercises={exercises} setExercises={setExercises} value={row.exerciseId} onChange={(id) => updateRow(row.key, { exerciseId: id })} />
+              </div>
+              <div className="w-32">
+                <label className="text-[10px] block mb-0.5" style={{ color: INK_SOFT }}>Mode</label>
+                <select value={row.mode} onChange={(e) => updateRow(row.key, { mode: e.target.value })} className="w-full px-1.5 py-1 text-xs" style={inputStyle()}>
+                  <option value="plain">Plain</option>
+                  <option value="531">5/3/1 %TM</option>
+                </select>
+              </div>
+              <button onClick={() => removeRow(row.key)} className="icon-btn" style={{ color: INK_SOFT }}><X size={15} /></button>
+            </div>
+
+            {row.mode === "531" ? (
+              <div className="flex flex-wrap items-end gap-2">
+                <div className="w-32">
+                  <label className="text-[10px] block mb-0.5" style={{ color: INK_SOFT }}>Training max ref</label>
+                  <select value={row.tmLift} onChange={(e) => updateRow(row.key, { tmLift: e.target.value })} className="w-full px-1.5 py-1 text-xs" style={inputStyle()}>
+                    {TM_LIFTS.map((l) => <option key={l.key} value={l.key}>{l.label}</option>)}
+                  </select>
+                </div>
+                <p className="text-[10px] flex-1" style={{ color: INK_SOFT }}>
+                  Sets/reps/weight auto-calculate from the block's training max and current 5/3/1 week.
+                </p>
+              </div>
+            ) : (
+              <div className="flex flex-wrap items-end gap-2">
+                <div className="w-16"><label className="text-[10px] block mb-0.5" style={{ color: INK_SOFT }}>Sets</label><input type="number" min={1} value={row.sets} onChange={(e) => updateRow(row.key, { sets: Number(e.target.value) })} className="w-full px-1.5 py-1 text-xs" style={inputStyle()} /></div>
+                <div className="w-20"><label className="text-[10px] block mb-0.5" style={{ color: INK_SOFT }}>Reps</label><input value={row.repRange} onChange={(e) => updateRow(row.key, { repRange: e.target.value })} placeholder="8-10" className="w-full px-1.5 py-1 text-xs" style={inputStyle()} /></div>
+                <div className="w-20"><label className="text-[10px] block mb-0.5" style={{ color: INK_SOFT }}>RPE</label><input value={row.targetRpe} onChange={(e) => updateRow(row.key, { targetRpe: e.target.value })} placeholder="8" className="w-full px-1.5 py-1 text-xs" style={inputStyle()} /></div>
+                <div className="w-24"><label className="text-[10px] block mb-0.5" style={{ color: INK_SOFT }}>Target weight</label><input value={row.targetWeight} onChange={(e) => updateRow(row.key, { targetWeight: e.target.value })} placeholder="185" className="w-full px-1.5 py-1 text-xs" style={inputStyle()} /></div>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <button onClick={addRow} className="flex items-center gap-1 text-xs mt-2" style={{ color: INK_SOFT }}><Plus size={12} /> Add exercise</button>
+
+      <div className="flex gap-2 mt-3 justify-end">
+        <button onClick={onCancel} className="text-xs px-3 py-1.5" style={{ border: `1.5px solid ${INK}`, borderRadius: 3, color: INK }}>Cancel</button>
+        <button onClick={submit} className="text-xs px-3 py-1.5" style={{ background: INK, color: PAPER_BG, borderRadius: 3 }}>Save day</button>
+      </div>
+    </PaperCard>
+  );
+}
+
+/* ===================== CALENDAR TAB ===================== */
+
+function templateForDate(schedule, blocks, dateISO) {
+  if (!schedule || !schedule.blockId || !schedule.startDate) return null;
+  const block = blocks.find((b) => b.id === schedule.blockId);
+  if (!block || block.templates.length === 0) return null;
+  if (dateISO < schedule.startDate) return null;
+  const restSet = new Set(schedule.restWeekdays || []);
+  const d = new Date(dateISO + "T00:00:00");
+  if (restSet.has(d.getDay())) return null;
+  let trainingIndex = -1;
+  let cursor = new Date(schedule.startDate + "T00:00:00");
+  const target = d.getTime();
+  let count = 0;
+  let safety = 0;
+  while (cursor.getTime() <= target && safety < 3000) {
+    if (!restSet.has(cursor.getDay())) {
+      if (cursor.getTime() === target) trainingIndex = count;
+      count++;
+    }
+    cursor.setDate(cursor.getDate() + 1);
+    safety++;
+  }
+  if (trainingIndex === -1) return null;
+  return block.templates[trainingIndex % block.templates.length];
+}
+
+function CalendarTab({ blocks, logs, schedule, setSchedule }) {
+  const [viewDate, setViewDate] = useState(new Date());
+  const [showConfig, setShowConfig] = useState(!schedule);
+  const block = schedule ? blocks.find((b) => b.id === schedule.blockId) : null;
+
+  const year = viewDate.getFullYear();
+  const month = viewDate.getMonth();
+  const firstOfMonth = new Date(year, month, 1);
+  const startWeekday = firstOfMonth.getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  const cells = [];
+  for (let i = 0; i < startWeekday; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+
+  const logsByDate = {};
+  logs.forEach((l) => { logsByDate[l.date] = (logsByDate[l.date] || 0) + 1; });
+
+  function changeMonth(delta) { setViewDate(new Date(year, month + delta, 1)); }
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-sm nb-script" style={{ color: INK_SOFT }}>{schedule && block ? `Following ${block.name}` : "No schedule set"}</p>
+        <button onClick={() => setShowConfig((s) => !s)} className="flex items-center gap-1 text-sm px-3 py-1.5 nb-script" style={{ border: `1.5px solid ${INK}`, borderRadius: 3, color: INK }}>
+          <Edit2 size={13} /> {schedule ? "Edit schedule" : "Set up schedule"}
+        </button>
+      </div>
+
+      {showConfig && (
+        <ScheduleConfigForm blocks={blocks} schedule={schedule} onSave={(s) => { setSchedule(s); setShowConfig(false); }} onClear={() => { setSchedule(null); setShowConfig(false); }} />
+      )}
+
+      <div className="flex items-center justify-between mb-3">
+        <button onClick={() => changeMonth(-1)} className="p-1.5" style={{ color: INK_SOFT }}><ChevronLeft size={16} /></button>
+        <p className="text-sm font-medium nb-script" style={{ fontSize: "1.1rem" }}>{viewDate.toLocaleDateString(undefined, { month: "long", year: "numeric" })}</p>
+        <button onClick={() => changeMonth(1)} className="p-1.5" style={{ color: INK_SOFT }}><ChevronRight size={16} /></button>
+      </div>
+
+      <div className="grid grid-cols-7 gap-1 mb-1">
+        {WEEKDAYS.map((w) => <div key={w} className="text-[10px] sm:text-[11px] text-center py-1 nb-script" style={{ color: INK_SOFT }}>{w}</div>)}
+      </div>
+      <div className="grid grid-cols-7 gap-1">
+        {cells.map((d, i) => {
+          if (d === null) return <div key={i} />;
+          const dateISO = isoFromYMD(year, month, d);
+          const tmpl = templateForDate(schedule, blocks, dateISO);
+          const logged = logsByDate[dateISO];
+          const isToday = dateISO === todayISO();
+          return (
+            <div
+              key={i}
+              className="rounded-md p-1 sm:p-1.5 min-h-[52px] sm:min-h-[64px] text-left overflow-hidden"
+              style={{
+                border: `1.5px solid ${isToday ? ACCENT : "rgba(59,47,30,0.25)"}`,
+                background: logged ? "#9bc49b" : "rgba(255,252,240,0.5)",
+              }}
+            >
+              <div className="flex items-center justify-between">
+                <span className={`text-[10px] sm:text-[11px] ${isToday ? "font-semibold" : ""}`} style={{ color: isToday ? ACCENT : logged ? "#1f3d1f" : INK_SOFT }}>{d}</span>
+                {logged && <Check size={11} style={{ color: "#1f3d1f" }} />}
+              </div>
+              {tmpl && <p className="text-[9px] sm:text-[10px] mt-1 leading-tight truncate" style={{ color: logged ? "#1f3d1f" : INK_SOFT, fontWeight: logged ? 600 : 400 }}>{tmpl.name}</p>}
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="flex items-center gap-4 mt-3 text-[11px]" style={{ color: INK_SOFT }}>
+        <span className="flex items-center gap-1.5"><span style={{ width: 12, height: 12, background: "#9bc49b", borderRadius: 2, display: "inline-block", border: "1px solid #1f3d1f" }} /> Workout logged</span>
+        <span>Text below date = scheduled template</span>
+      </div>
+    </div>
+  );
+}
+
+function ScheduleConfigForm({ blocks, schedule, onSave, onClear }) {
+  const [blockId, setBlockId] = useState(schedule?.blockId || blocks[0]?.id || "");
+  const [startDate, setStartDate] = useState(schedule?.startDate || todayISO());
+  const [restWeekdays, setRestWeekdays] = useState(schedule?.restWeekdays || [0, 6]);
+
+  function toggleRest(day) { setRestWeekdays((prev) => (prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day])); }
+  function submit() { if (!blockId) return; onSave({ blockId, startDate, restWeekdays }); }
+
+  const selectedBlock = blocks.find((b) => b.id === blockId);
+
+  return (
+    <PaperCard className="p-4 mb-4">
+      {blocks.length === 0 ? (
+        <p className="text-sm" style={{ color: INK_SOFT }}>Create a block with day templates in the Program tab first.</p>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+            <div>
+              <label className="text-xs block mb-1" style={{ color: INK_SOFT }}>Block to follow</label>
+              <select value={blockId} onChange={(e) => setBlockId(e.target.value)} className="w-full px-2 py-1.5 text-sm" style={inputStyle()}>
+                {blocks.map((b) => <option key={b.id} value={b.id} disabled={b.templates.length === 0}>{b.name} {b.templates.length === 0 ? "(no day templates)" : ""}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="text-xs block mb-1" style={{ color: INK_SOFT }}>Start date</label>
+              <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full px-2 py-1.5 text-sm" style={inputStyle()} />
+            </div>
+          </div>
+          <div className="mb-3">
+            <label className="text-xs block mb-1.5" style={{ color: INK_SOFT }}>Rest days (cycle skips these)</label>
+            <div className="flex gap-1.5 flex-wrap">
+              {WEEKDAYS.map((w, idx) => (
+                <button key={w} onClick={() => toggleRest(idx)} className="text-xs px-2.5 py-1" style={{ border: `1.5px solid ${INK}`, borderRadius: 3, background: restWeekdays.includes(idx) ? INK : "transparent", color: restWeekdays.includes(idx) ? PAPER_BG : INK }}>{w}</button>
+              ))}
+            </div>
+          </div>
+          {selectedBlock && selectedBlock.templates.length > 0 && (
+            <p className="text-xs mb-3" style={{ color: INK_SOFT }}>Cycle order: {selectedBlock.templates.map((t) => t.name).join(" → ")} → repeats</p>
+          )}
+          <div className="flex gap-2 justify-end">
+            {schedule && <button onClick={onClear} className="text-sm px-3 py-1.5" style={{ border: `1.5px solid ${ACCENT}`, borderRadius: 3, color: ACCENT }}>Clear schedule</button>}
+            <button onClick={submit} className="text-sm px-3 py-1.5" style={{ background: INK, color: PAPER_BG, borderRadius: 3 }}>Save schedule</button>
+          </div>
+        </>
+      )}
+    </PaperCard>
+  );
+}
+
+/* ===================== LOG TAB (notebook style) ===================== */
+
+function LogTab({ exercises, setExercises, blocks, logs, setLogs, exerciseById, schedule, bodyweightLogs, setBodyweightLogs, unit }) {
+  const [selectedBlockId, setSelectedBlockId] = useState(blocks[0]?.id || "");
+  const [selectedTemplateId, setSelectedTemplateId] = useState("");
+  const [date, setDate] = useState(todayISO());
+  const [entries, setEntries] = useState({});
+  const [freeEntries, setFreeEntries] = useState([]);
+  const [savedMsg, setSavedMsg] = useState(false);
+  const [editingLogId, setEditingLogId] = useState(null);
+  const [bwInput, setBwInput] = useState("");
+  const [bwSkippedToday, setBwSkippedToday] = useState(false);
+
+  const block = blocks.find((b) => b.id === selectedBlockId);
+  const template = block?.templates.find((t) => t.id === selectedTemplateId);
+
+  const todaysBwEntry = bodyweightLogs.find((b) => b.date === date);
+  const mostRecentBw = [...bodyweightLogs].sort((a, b) => (a.date < b.date ? 1 : -1))[0];
+
+  useEffect(() => {
+    if (schedule && schedule.blockId) {
+      const tmpl = templateForDate(schedule, blocks, date);
+      if (tmpl) {
+        setSelectedBlockId(schedule.blockId);
+        setSelectedTemplateId(tmpl.id);
+      }
+    }
+  }, [date]);
+
+  useEffect(() => {
+    if (template) {
+      const init = {};
+      template.exercises.forEach((te, idx) => {
+        const key = te.exerciseId + "__" + idx;
+        if (te.mode === "531") {
+          const resolved = resolve531Row(te, block, date);
+          init[key] = resolved.sets.map((s) => ({ reps: "", weight: s.weight ?? "", rpe: "" }));
+        } else {
+          init[key] = Array.from({ length: te.sets }, () => ({ reps: "", weight: "", rpe: "" }));
+        }
+      });
+      setEntries(init);
+    } else {
+      setEntries({});
+    }
+    setFreeEntries([]);
+  }, [selectedTemplateId, date]);
+
+  function updateSet(key, idx, patch) {
+    setEntries((prev) => {
+      const sets = [...(prev[key] || [])];
+      sets[idx] = { ...sets[idx], ...patch };
+      return { ...prev, [key]: sets };
+    });
+  }
+
+  function removeSet(key, idx) {
+    setEntries((prev) => {
+      const sets = [...(prev[key] || [])];
+      sets.splice(idx, 1);
+      return { ...prev, [key]: sets };
+    });
+  }
+
+  function copySet(key, idx) {
+    setEntries((prev) => {
+      const sets = [...(prev[key] || [])];
+      sets.splice(idx + 1, 0, { ...sets[idx] });
+      return { ...prev, [key]: sets };
+    });
+  }
+
+  function addSetToKey(key) {
+    setEntries((prev) => ({ ...prev, [key]: [...(prev[key] || []), { reps: "", weight: "", rpe: "" }] }));
+  }
+
+  function addFreeExercise() { setFreeEntries((prev) => [...prev, { key: uid(), exerciseId: exercises[0]?.id || "", sets: [{ reps: "", weight: "", rpe: "" }] }]); }
+  function updateFreeExercise(key, patch) { setFreeEntries((prev) => prev.map((f) => (f.key === key ? { ...f, ...patch } : f))); }
+  function updateFreeSet(key, idx, patch) {
+    setFreeEntries((prev) => prev.map((f) => {
+      if (f.key !== key) return f;
+      const sets = [...f.sets];
+      sets[idx] = { ...sets[idx], ...patch };
+      return { ...f, sets };
+    }));
+  }
+  function addFreeSet(key) { setFreeEntries((prev) => prev.map((f) => (f.key === key ? { ...f, sets: [...f.sets, { reps: "", weight: "", rpe: "" }] } : f))); }
+  function removeFreeExercise(key) { setFreeEntries((prev) => prev.filter((f) => f.key !== key)); }
+  function removeFreeSet(key, idx) {
+    setFreeEntries((prev) => prev.map((f) => {
+      if (f.key !== key) return f;
+      const sets = [...f.sets];
+      sets.splice(idx, 1);
+      return { ...f, sets };
+    }));
+  }
+  function copyFreeSet(key, idx) {
+    setFreeEntries((prev) => prev.map((f) => {
+      if (f.key !== key) return f;
+      const sets = [...f.sets];
+      sets.splice(idx + 1, 0, { ...sets[idx] });
+      return { ...f, sets };
+    }));
+  }
+
+  function commitBodyweight() {
+    if (bwInput && !isNaN(Number(bwInput))) {
+      setBodyweightLogs((prev) => {
+        const filtered = prev.filter((e) => e.date !== date);
+        return [...filtered, { date, weight: Number(bwInput) }].sort((a, b) => (a.date < b.date ? -1 : 1));
+      });
+    }
+    setBwInput("");
+  }
+
+  function saveLog() {
+    if (!todaysBwEntry && bwInput && !isNaN(Number(bwInput))) commitBodyweight();
+
+    const allEntries = [];
+    if (template) {
+      template.exercises.forEach((te, idx) => {
+        const key = te.exerciseId + "__" + idx;
+        const sets = entries[key] || [];
+        const cleanSets = sets.filter((s) => s.weight !== "" || s.reps !== "");
+        if (cleanSets.length) allEntries.push({ exerciseId: te.exerciseId, sets: cleanSets.map((s) => ({ reps: Number(s.reps) || 0, weight: Number(s.weight) || 0, rpe: s.rpe === "" ? null : Number(s.rpe) })) });
+      });
+    }
+    freeEntries.forEach((f) => {
+      const cleanSets = f.sets.filter((s) => s.weight !== "" || s.reps !== "");
+      if (cleanSets.length) allEntries.push({ exerciseId: f.exerciseId, sets: cleanSets.map((s) => ({ reps: Number(s.reps) || 0, weight: Number(s.weight) || 0, rpe: s.rpe === "" ? null : Number(s.rpe) })) });
+    });
+    if (allEntries.length === 0) return;
+
+    if (editingLogId) {
+      setLogs((prev) => prev.map((l) => (l.id === editingLogId ? { ...l, date, blockId: selectedBlockId || null, templateId: selectedTemplateId || null, templateName: template?.name || l.templateName, entries: allEntries } : l)));
+      setEditingLogId(null);
+    } else {
+      setLogs((prev) => [...prev, { id: uid(), date, blockId: selectedBlockId || null, templateId: selectedTemplateId || null, templateName: template?.name || "Freeform session", entries: allEntries }]);
+    }
+    setSavedMsg(true);
+    setTimeout(() => setSavedMsg(false), 2000);
+    if (template) {
+      const init = {};
+      template.exercises.forEach((te, idx) => {
+        const key = te.exerciseId + "__" + idx;
+        if (te.mode === "531") {
+          const resolved = resolve531Row(te, block, date);
+          init[key] = resolved.sets.map((s) => ({ reps: "", weight: s.weight ?? "", rpe: "" }));
+        } else {
+          init[key] = Array.from({ length: te.sets }, () => ({ reps: "", weight: "", rpe: "" }));
+        }
+      });
+      setEntries(init);
+    }
+    setFreeEntries([]);
+  }
+
+  function loadLogForEdit(log) {
+    setEditingLogId(log.id);
+    setDate(log.date);
+    setSelectedBlockId(log.blockId || "");
+    setSelectedTemplateId(log.templateId || "");
+    const free = log.entries.map((e) => ({ key: uid(), exerciseId: e.exerciseId, sets: e.sets.map((s) => ({ reps: String(s.reps), weight: String(s.weight), rpe: s.rpe == null ? "" : String(s.rpe) })) }));
+    setFreeEntries(free);
+    setEntries({});
+  }
+
+  function cancelEdit() {
+    setEditingLogId(null);
+    setFreeEntries([]);
+  }
+
+  function deleteLog(id) {
+    setLogs((prev) => prev.filter((l) => l.id !== id));
+    if (editingLogId === id) cancelEdit();
+  }
+
+  const notebookInput = {
+    border: "none",
+    borderBottom: `2px dotted ${INK_SOFT}`,
+    background: "transparent",
+    color: ACCENT,
+    fontFamily: "'Kalam', cursive",
+    fontWeight: 700,
+  };
+
+  return (
+    <div>
+      <div
+        className="rounded-sm p-4 sm:p-6"
+        style={{
+          background: "repeating-linear-gradient(white 0px, white 27px, #cdd9e0 28px, white 29px)",
+          border: `1.5px solid ${INK}`,
+          boxShadow: "3px 4px 0 rgba(59,47,30,0.18)",
+          position: "relative",
+        }}
+      >
+        <div style={{ position: "absolute", top: 0, bottom: 0, left: 28, width: 1.5, background: "#d98a8a" }} />
+        <div className="pl-6">
+          <div className="flex items-center justify-between">
+            <p className="nb-header text-lg mb-3" style={{ color: INK }}>{editingLogId ? "Editing a past session" : "Today's session"}</p>
+            {editingLogId && (
+              <button onClick={cancelEdit} className="text-xs px-2 py-1 nb-script" style={{ border: `1.5px solid ${INK}`, borderRadius: 3, color: INK }}>Cancel edit</button>
+            )}
+          </div>
+
+          {!editingLogId && !todaysBwEntry && !bwSkippedToday && (
+            <div className="flex items-center gap-2 mb-4 flex-wrap rounded-md p-2" style={{ background: "rgba(139,107,58,0.07)", border: "1px dashed rgba(59,47,30,0.25)" }}>
+              <span className="text-xs nb-script" style={{ color: INK_SOFT }}>Bodyweight today?</span>
+              <input
+                type="number"
+                value={bwInput}
+                onChange={(e) => setBwInput(e.target.value)}
+                placeholder={mostRecentBw ? String(mostRecentBw.weight) : "—"}
+                className="w-16 px-1.5 py-1 text-sm text-center"
+                style={notebookInput}
+              />
+              <span className="text-xs" style={{ color: INK_SOFT }}>{unit}</span>
+              <button onClick={commitBodyweight} className="text-xs px-2 py-1" style={{ background: INK, color: PAPER_BG, borderRadius: 3 }}>Save</button>
+              <button onClick={() => setBwSkippedToday(true)} className="text-xs px-2 py-1" style={{ color: INK_SOFT }}>Skip</button>
+            </div>
+          )}
+          {!editingLogId && todaysBwEntry && (
+            <p className="text-xs mb-3 nb-script" style={{ color: "#2d5240" }}>✓ Bodyweight logged today: {todaysBwEntry.weight} {unit}</p>
+          )}
+
+          <div className="flex flex-wrap gap-3 mb-4">
+            <div>
+              <label className="text-xs block mb-0.5" style={{ color: INK_SOFT }}>Date</label>
+              <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="px-2 py-1 text-sm" style={notebookInput} />
+            </div>
+            <div>
+              <label className="text-xs block mb-0.5" style={{ color: INK_SOFT }}>Block</label>
+              <select value={selectedBlockId} onChange={(e) => { setSelectedBlockId(e.target.value); setSelectedTemplateId(""); }} className="px-2 py-1 text-sm" style={{ ...notebookInput, color: INK }}>
+                <option value="">Freeform (no block)</option>
+                {blocks.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+              </select>
+            </div>
+            {block && (
+              <div>
+                <label className="text-xs block mb-0.5" style={{ color: INK_SOFT }}>Day template</label>
+                <select value={selectedTemplateId} onChange={(e) => setSelectedTemplateId(e.target.value)} className="px-2 py-1 text-sm" style={{ ...notebookInput, color: INK }}>
+                  <option value="">Select a day</option>
+                  {block.templates.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+                </select>
+              </div>
+            )}
+          </div>
+
+          {!editingLogId && schedule && templateForDate(schedule, blocks, date) && selectedTemplateId === templateForDate(schedule, blocks, date)?.id && (
+            <p className="text-xs mb-3 nb-script" style={{ color: "#2d5240" }}>✓ Auto-filled from your schedule for this date.</p>
+          )}
+
+          {!editingLogId && block && block.templates.some((t) => t.exercises.some((e) => e.mode === "531")) && (
+            <p className="text-xs mb-3 nb-script" style={{ color: "#7a2d55" }}>
+              5/3/1 cycle {cycleInfoForBlock(block, date).cycleNumber}, week {cycleInfoForBlock(block, date).cycleWeek} — weights pre-filled from training max.
+            </p>
+          )}
+
+          {!editingLogId && template && (
+            <div className="space-y-4 mb-4">
+              {template.exercises.length === 0 && <p className="text-xs" style={{ color: INK_SOFT }}>This day has no exercises yet — add them in the Program tab.</p>}
+              {template.exercises.map((te, idx) => {
+                const exo = exerciseById(te.exerciseId);
+                const key = te.exerciseId + "__" + idx;
+                const sets = entries[key] || [];
+                const is531 = te.mode === "531";
+                const resolved = is531 ? resolve531Row(te, block, date) : null;
+                const last = lastSessionFor(logs, te.exerciseId, date);
+                return (
+                  <div key={key} className="pb-3" style={{ borderBottom: `1px dashed rgba(59,47,30,0.3)` }}>
+                    <div className="flex items-center justify-between flex-wrap gap-1">
+                      <p className="text-base font-medium nb-script" style={{ color: INK }}>
+                        {exo?.name || "Unknown"}
+                        {is531 && <span className="text-[11px] ml-1.5" style={{ color: "#7a2d55" }}>[5/3/1 {TM_LIFTS.find((l) => l.key === te.tmLift)?.label}]</span>}
+                      </p>
+                      {last && (
+                        <p className="text-xs nb-script italic" style={{ color: INK_SOFT }}>
+                          Last time ({fmtDate(last.date)}): {last.sets.map((s) => `${s.weight}×${s.reps}${s.rpe ? `@${s.rpe}` : ""}`).join(", ")}
+                        </p>
+                      )}
+                    </div>
+                    <p className="text-xs mb-2" style={{ color: INK_SOFT }}>
+                      {is531
+                        ? `${resolved.weekLabel}: ${resolved.sets.map((s) => `${s.weight ?? "?"} lbs ×${s.reps}`).join(", ")}`
+                        : `Target: ${te.sets}×${te.repRange}${te.targetRpe ? ` @RPE ${te.targetRpe}` : ""}${te.targetWeight ? ` (${te.targetWeight} lbs)` : ""}`}
+                    </p>
+                    <div className="space-y-2">
+                      {sets.map((s, sidx) => {
+                        const lastSet = last?.sets?.[sidx];
+                        return (
+                          <div key={sidx} className="set-row flex items-center gap-1.5 flex-wrap rounded-md p-1.5" style={{ background: "rgba(139,107,58,0.05)" }}>
+                            <span className="text-xs w-9" style={{ color: INK_SOFT }}>Set {sidx + 1}</span>
+                            <input type="number" placeholder="lbs" value={s.weight} onChange={(e) => updateSet(key, sidx, { weight: e.target.value })} className="w-16 px-1 py-1.5 text-base text-center" style={notebookInput} />
+                            <span style={{ color: INK_SOFT }}>×</span>
+                            <input type="number" placeholder="reps" value={s.reps} onChange={(e) => updateSet(key, sidx, { reps: e.target.value })} className="w-14 px-1 py-1.5 text-base text-center" style={notebookInput} />
+                            <span className="text-xs" style={{ color: INK_SOFT }}>@</span>
+                            <input type="number" placeholder="RPE" step="0.5" value={s.rpe} onChange={(e) => updateSet(key, sidx, { rpe: e.target.value })} className="w-12 px-1 py-1.5 text-base text-center" style={notebookInput} />
+                            <button onClick={() => copySet(key, sidx)} className="icon-btn" style={{ color: INK_SOFT }} title="Copy this set"><Copy size={15} /></button>
+                            <button onClick={() => removeSet(key, sidx)} className="icon-btn" style={{ color: INK_SOFT }} title="Remove this set"><X size={15} /></button>
+                            {lastSet && (
+                              <span className="text-[11px] nb-script italic w-full sm:w-auto" style={{ color: "#8a8270" }}>
+                                (was {lastSet.weight}×{lastSet.reps})
+                              </span>
+                            )}
+                            {is531 && <span className="text-[10px]" style={{ color: INK_SOFT }}>{resolved.sets[sidx]?.reps} target reps</span>}
+                          </div>
+                        );
+                      })}
+                      <button onClick={() => addSetToKey(key)} className="flex items-center gap-1 text-xs py-1" style={{ color: INK_SOFT }}><Plus size={13} /> Add set</button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          <div className="rounded-sm p-3 mb-4" style={{ border: `1.5px dashed ${INK_SOFT}` }}>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm font-medium nb-script" style={{ color: INK }}>{editingLogId ? "Logged exercises" : "+ Quick-add exercise"}</p>
+              <button onClick={addFreeExercise} className="flex items-center gap-1 text-xs px-2 py-1" style={{ border: `1.5px solid ${INK}`, borderRadius: 3, color: INK }}>
+                <Plus size={12} /> Add
+              </button>
+            </div>
+            <div className="space-y-3">
+              {freeEntries.map((f) => {
+                const last = lastSessionFor(logs, f.exerciseId, date);
+                return (
+                  <div key={f.key} className="rounded-md p-2" style={{ border: "1px solid rgba(59,47,30,0.2)" }}>
+                    <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                      <div className="flex-1 min-w-[160px]">
+                        <ExerciseCombobox exercises={exercises} setExercises={setExercises} value={f.exerciseId} onChange={(id) => updateFreeExercise(f.key, { exerciseId: id })} />
+                      </div>
+                      <button onClick={() => removeFreeExercise(f.key)} className="icon-btn" style={{ color: INK_SOFT }}><X size={15} /></button>
+                    </div>
+                    {last && (
+                      <p className="text-xs mb-1 nb-script italic" style={{ color: INK_SOFT }}>
+                        Last time ({fmtDate(last.date)}): {last.sets.map((s) => `${s.weight}×${s.reps}${s.rpe ? `@${s.rpe}` : ""}`).join(", ")}
+                      </p>
+                    )}
+                    <div className="space-y-2">
+                      {f.sets.map((s, idx) => (
+                        <div key={idx} className="set-row flex items-center gap-1.5 flex-wrap rounded-md p-1.5" style={{ background: "rgba(139,107,58,0.05)" }}>
+                          <span className="text-xs w-9" style={{ color: INK_SOFT }}>Set {idx + 1}</span>
+                          <input type="number" placeholder="lbs" value={s.weight} onChange={(e) => updateFreeSet(f.key, idx, { weight: e.target.value })} className="w-16 px-1 py-1.5 text-base text-center" style={notebookInput} />
+                          <span style={{ color: INK_SOFT }}>×</span>
+                          <input type="number" placeholder="reps" value={s.reps} onChange={(e) => updateFreeSet(f.key, idx, { reps: e.target.value })} className="w-14 px-1 py-1.5 text-base text-center" style={notebookInput} />
+                          <span className="text-xs" style={{ color: INK_SOFT }}>@</span>
+                          <input type="number" placeholder="RPE" step="0.5" value={s.rpe} onChange={(e) => updateFreeSet(f.key, idx, { rpe: e.target.value })} className="w-12 px-1 py-1.5 text-base text-center" style={notebookInput} />
+                          <button onClick={() => copyFreeSet(f.key, idx)} className="icon-btn" style={{ color: INK_SOFT }} title="Copy this set"><Copy size={15} /></button>
+                          <button onClick={() => removeFreeSet(f.key, idx)} className="icon-btn" style={{ color: INK_SOFT }} title="Remove this set"><X size={15} /></button>
+                        </div>
+                      ))}
+                    </div>
+                    <button onClick={() => addFreeSet(f.key)} className="flex items-center gap-1 text-[11px] mt-1.5" style={{ color: INK_SOFT }}><Plus size={11} /> Add set</button>
+                  </div>
+                );
+              })}
+              {freeEntries.length === 0 && <p className="text-xs" style={{ color: INK_SOFT }}>Add any exercise not on today's template.</p>}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button onClick={saveLog} className="flex items-center gap-1.5 text-sm px-4 py-2 nb-script" style={{ background: ACCENT, color: "#fff8ec", borderRadius: 3 }}>
+              <Check size={15} /> {editingLogId ? "Update workout" : "Save workout"}
+            </button>
+            {savedMsg && <span className="text-sm nb-script" style={{ color: "#2d5240" }}>{editingLogId ? "Updated!" : "Logged! Keep grinding."}</span>}
+          </div>
+        </div>
+      </div>
+
+      {logs.length > 0 && (
+        <div className="mt-6">
+          <p className="text-sm font-medium mb-2 nb-header" style={{ color: INK }}>Recent pages</p>
+          <div className="space-y-2">
+            {[...logs].sort((a, b) => (a.date < b.date ? 1 : -1)).slice(0, 8).map((log) => (
+              <PaperCard key={log.id} className="p-2.5 text-xs">
+                <div className="flex justify-between items-center">
+                  <span className="font-medium nb-script" style={{ fontSize: "1rem" }}>{fmtDate(log.date)} — {log.templateName}</span>
+                  <div className="flex items-center gap-2">
+                    <span style={{ color: INK_SOFT }}>{log.entries.length} exercises</span>
+                    <button onClick={() => loadLogForEdit(log)} className="icon-btn" style={{ color: INK_SOFT }} title="Edit"><Edit2 size={15} /></button>
+                    <button onClick={() => deleteLog(log.id)} className="icon-btn" style={{ color: INK_SOFT }} title="Delete"><Trash2 size={15} /></button>
+                  </div>
+                </div>
+              </PaperCard>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ===================== TROPHIES TAB ===================== */
+
+function TrophiesTab({ userStats, resolvedAchievements, gender, setGender, unit, setUnit }) {
+  const [filterCategory, setFilterCategory] = useState("All");
+
+  if (!gender) {
+    return (
+      <PaperCard className="p-5">
+        <p className="text-sm font-medium mb-2 nb-header" style={{ color: INK }}>One quick setup step</p>
+        <p className="text-xs mb-3" style={{ color: INK_SOFT }}>
+          Strength rankings are gender-specific (this only affects ranking math — nothing else in the app). Pick one to continue; you can change it anytime from this tab.
+        </p>
+        <div className="flex gap-2 mb-3">
+          <button onClick={() => setGender("M")} className="text-sm px-4 py-2 nb-script" style={{ border: `1.5px solid ${INK}`, borderRadius: 3, color: INK }}>Male tables</button>
+          <button onClick={() => setGender("F")} className="text-sm px-4 py-2 nb-script" style={{ border: `1.5px solid ${INK}`, borderRadius: 3, color: INK }}>Female tables</button>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs" style={{ color: INK_SOFT }}>Units:</span>
+          <button onClick={() => setUnit("lb")} className="text-xs px-2 py-1" style={{ border: `1.5px solid ${INK}`, borderRadius: 3, background: unit === "lb" ? INK : "transparent", color: unit === "lb" ? PAPER_BG : INK }}>lb</button>
+          <button onClick={() => setUnit("kg")} className="text-xs px-2 py-1" style={{ border: `1.5px solid ${INK}`, borderRadius: 3, background: unit === "kg" ? INK : "transparent", color: unit === "kg" ? PAPER_BG : INK }}>kg</button>
+        </div>
+      </PaperCard>
+    );
+  }
+
+  const categories = ["All", ...Array.from(new Set(resolvedAchievements.map((a) => a.category)))];
+  const filtered = filterCategory === "All" ? resolvedAchievements : resolvedAchievements.filter((a) => a.category === filterCategory);
+  const sortedFiltered = [...filtered].sort((a, b) => {
+    if (a.result.earned && !b.result.earned) return -1;
+    if (!a.result.earned && b.result.earned) return 1;
+    return (b.result.progress ?? 0) - (a.result.progress ?? 0);
+  });
+  const earnedCount = resolvedAchievements.filter((a) => a.result.earned).length;
+
+  return (
+    <div>
+      <PaperCard className="p-3 mb-4">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className="flex items-center gap-2">
+            <Trophy size={18} style={{ color: GOLD }} />
+            <p className="text-sm nb-script" style={{ color: INK }}>{earnedCount} / {resolvedAchievements.length} achievements earned</p>
+          </div>
+          <div className="flex items-center gap-3 text-xs" style={{ color: INK_SOFT }}>
+            <span>Gender table: <button onClick={() => setGender(gender === "M" ? "F" : "M")} className="underline" style={{ color: INK }}>{gender === "M" ? "Male" : "Female"}</button></span>
+            <span>Units: <button onClick={() => setUnit(unit === "lb" ? "kg" : "lb")} className="underline" style={{ color: INK }}>{unit}</button></span>
+          </div>
+        </div>
+      </PaperCard>
+
+      <RankingPanel userStats={userStats} gender={gender} unit={unit} />
+
+      {userStats.dots != null && (
+        <PaperCard className="p-3 mb-4 flex items-center justify-between flex-wrap gap-2">
+          <div className="flex items-center gap-2">
+            <Medal size={18} style={{ color: GOLD }} />
+            <div>
+              <p className="text-sm font-medium nb-script" style={{ color: INK }}>DOTS Score: {userStats.dots}</p>
+              <p className="text-xs" style={{ color: INK_SOFT }}>{userStats.dotsTier ? `Tier: ${userStats.dotsTier}` : "Below Novice tier"}</p>
+            </div>
+          </div>
+        </PaperCard>
+      )}
+
+      <div className="flex gap-2 mb-3 flex-wrap">
+        {categories.map((c) => (
+          <button
+            key={c}
+            onClick={() => setFilterCategory(c)}
+            className="text-xs px-2.5 py-1.5 nb-script"
+            style={{ border: `1.5px solid ${INK}`, borderRadius: 3, background: filterCategory === c ? INK : "transparent", color: filterCategory === c ? PAPER_BG : INK }}
+          >
+            {c}
+          </button>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        {sortedFiltered.map((a) => (
+          <AchievementCard key={a.id} achievement={a} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function RankingPanel({ userStats, gender, unit }) {
+  return (
+    <div className="mb-4">
+      <p className="text-sm font-medium mb-2 nb-header" style={{ color: INK }}>Strength Ranking</p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        {TM_LIFTS.map((lift) => {
+          const ls = userStats.mainLiftStats[lift.key];
+          if (!ls || !ls.ratio) {
+            return (
+              <PaperCard key={lift.key} className="p-3">
+                <p className="text-sm font-medium nb-script">{lift.label}</p>
+                <p className="text-xs" style={{ color: INK_SOFT }}>Not enough data — log this lift and a bodyweight entry to see your rank.</p>
+              </PaperCard>
+            );
+          }
+          const tierInfo = tierForRatio(lift.key, ls.ratio, gender);
+          const score = normalizedScore(tierInfo);
+          return (
+            <PaperCard key={lift.key} className="p-3">
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-sm font-medium nb-script">{lift.label}</p>
+                <span className="text-[10px] px-1.5 py-0.5 rounded nb-script" style={{ background: "#e8c45a55", color: "#7a5a10" }}>{tierInfo.tierName}</span>
+              </div>
+              <p className="text-xs mb-1.5" style={{ color: INK_SOFT }}>
+                {ls.e1rm} {unit} e1RM · {round(ls.ratio, 2)}x bodyweight
+              </p>
+              <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(59,47,30,0.15)" }}>
+                <div className="h-full" style={{ width: `${score}%`, background: ACCENT }} />
+              </div>
+              {tierInfo.nextTierName && (
+                <p className="text-[10px] mt-1" style={{ color: INK_SOFT }}>{Math.round(tierInfo.progressToNext * 100)}% to {tierInfo.nextTierName}</p>
+              )}
+            </PaperCard>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function AchievementCard({ achievement }) {
+  const Icon = ICONS[achievement.icon] || Star;
+  const { earned, progress, label } = achievement.result;
+  const tierColor = TIER_COLOR[achievement.tier] || INK_SOFT;
+  return (
+    <PaperCard className="p-3" style={{ opacity: earned ? 1 : 0.55 }}>
+      <div className="flex items-start gap-2.5">
+        <div
+          className="flex items-center justify-center rounded-full shrink-0"
+          style={{ width: 36, height: 36, background: earned ? `${tierColor}22` : "rgba(59,47,30,0.08)", border: `1.5px solid ${earned ? tierColor : "rgba(59,47,30,0.25)"}` }}
+        >
+          <Icon size={17} style={{ color: earned ? tierColor : INK_SOFT }} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium nb-script" style={{ color: INK }}>{achievement.name}</p>
+          <p className="text-[11px]" style={{ color: INK_SOFT }}>{achievement.description}</p>
+          {progress != null && progress < 1 && (
+            <>
+              <div className="h-1 rounded-full overflow-hidden mt-1.5" style={{ background: "rgba(59,47,30,0.15)" }}>
+                <div className="h-full" style={{ width: `${Math.round(progress * 100)}%`, background: tierColor }} />
+              </div>
+              <p className="text-[10px] mt-0.5" style={{ color: INK_SOFT }}>{label}</p>
+            </>
+          )}
+          {earned && <p className="text-[10px] mt-1" style={{ color: "#3f6b3f" }}>✓ Earned</p>}
+        </div>
+      </div>
+    </PaperCard>
+  );
+}
+
+/* ===================== NOTES TAB ===================== */
+
+function NotesTab({ generalNotes, setGeneralNotes, blocks, updateBlock }) {
+  return (
+    <div className="space-y-6">
+      <div>
+        <p className="text-sm font-medium mb-2 nb-header" style={{ color: INK }}>General notes</p>
+        <p className="text-xs mb-2" style={{ color: INK_SOFT }}>Anything about how you use the app, things to remember, ideas to try later.</p>
+        <textarea
+          value={generalNotes}
+          onChange={(e) => setGeneralNotes(e.target.value)}
+          rows={8}
+          placeholder="e.g. My shoulder feels best when I warm up with face pulls first. Try a longer deload next time..."
+          className="w-full px-3 py-2 text-sm"
+          style={{ ...inputStyle(), fontFamily: "'Kalam', cursive" }}
+        />
+      </div>
+
+      {blocks.length > 0 && (
+        <div>
+          <p className="text-sm font-medium mb-2 nb-header" style={{ color: INK }}>Per-program notes</p>
+          <div className="space-y-3">
+            {blocks.map((b) => (
+              <PaperCard key={b.id} className="p-3">
+                <p className="text-sm font-medium nb-script mb-1.5" style={{ fontSize: "1.05rem" }}>{b.name}</p>
+                <textarea
+                  value={b.notes || ""}
+                  onChange={(e) => updateBlock(b.id, { notes: e.target.value })}
+                  rows={3}
+                  placeholder="Tweaks, cues, things to remember for this program..."
+                  className="w-full px-2 py-1.5 text-sm"
+                  style={{ ...inputStyle(), fontFamily: "'Kalam', cursive" }}
+                />
+              </PaperCard>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ===================== PROGRESS TAB ===================== */
+
+const CHART_COLORS = ["#8a3324", "#2d5240", "#2d4a5a", "#7a5a10", "#7a2d55", "#3d6b6b", "#9a5a1a", "#4a3d7a"];
+const TOTAL_COLOR = "#3b2f1e";
+
+function ProgressTab({ exercises, logs, blocks, schedule, exerciseById, bodyweightLogs, setBodyweightLogs, progressSettings, setProgressSettings }) {
+  const mainLifts = exercises.filter((e) => e.isMain);
+  const trackableExercises = exercises;
+
+  const selectedTarget = progressSettings.selectedTarget || mainLifts[0]?.id || trackableExercises[0]?.id || null;
+
+  function setSelectedTarget(id) {
+    setProgressSettings((prev) => ({ ...prev, selectedTarget: id }));
+  }
+  function setBodyweightShown(v) {
+    setProgressSettings((prev) => ({ ...prev, bodyweightShown: v }));
+  }
+  function setDetailShown(v) {
+    setProgressSettings((prev) => ({ ...prev, detailShown: v }));
+  }
+
+  function historyFor(exerciseId) {
+    const points = [];
+    [...logs].sort((a, b) => (a.date > b.date ? 1 : -1)).forEach((log) => {
+      const entry = log.entries.find((e) => e.exerciseId === exerciseId);
+      if (!entry) return;
+      let best1rm = 0;
+      let bestSet = null;
+      entry.sets.forEach((s) => {
+        const e1 = est1RM(s.weight, s.reps);
+        if (e1 > best1rm) { best1rm = e1; bestSet = s; }
+      });
+      if (bestSet) points.push({ date: log.date, est1rm: round(best1rm, 1), weight: bestSet.weight, reps: bestSet.reps });
+    });
+    return points;
+  }
+
+  function totalHistory() {
+    const points = [];
+    [...logs].sort((a, b) => (a.date > b.date ? 1 : -1)).forEach((log) => {
+      let sum = 0;
+      log.entries.forEach((entry) => {
+        let best1rm = 0;
+        entry.sets.forEach((s) => {
+          const e1 = est1RM(s.weight, s.reps);
+          if (e1 > best1rm) best1rm = e1;
+        });
+        sum += best1rm;
+      });
+      points.push({ date: log.date, est1rm: round(sum, 1) });
+    });
+    return points;
+  }
+
+  function volumeByMuscle() {
+    const weekly = {};
+    logs.forEach((log) => {
+      const d = new Date(log.date + "T00:00:00");
+      const week = `${d.getFullYear()}-W${String(getWeekNum(d)).padStart(2, "0")}`;
+      log.entries.forEach((entry) => {
+        const exo = exerciseById(entry.exerciseId);
+        if (!exo) return;
+        const tonnage = entry.sets.reduce((sum, s) => sum + s.weight * s.reps, 0);
+        weekly[week] = weekly[week] || {};
+        weekly[week][exo.muscle] = (weekly[week][exo.muscle] || 0) + tonnage;
+      });
+    });
+    return weekly;
+  }
+
+  function getWeekNum(d) {
+    const onejan = new Date(d.getFullYear(), 0, 1);
+    return Math.ceil(((d - onejan) / 86400000 + onejan.getDay() + 1) / 7);
+  }
+
+  function computeDeloadSignals() {
+    const signals = [];
+    mainLifts.forEach((exo) => {
+      const hist = historyFor(exo.id);
+      if (hist.length >= 3) {
+        const lastThree = hist.slice(-3);
+        const trend = lastThree[2].est1rm - lastThree[0].est1rm;
+        if (trend <= 0) signals.push({ text: `${exo.name}'s estimated 1RM hasn't progressed over your last 3 logged sessions (${round(lastThree[0].est1rm)} → ${round(lastThree[2].est1rm)} lbs).` });
+      }
+    });
+    const sessionsWithRpe = [...logs].sort((a, b) => (a.date > b.date ? 1 : -1)).map((log) => {
+      const rpes = [];
+      log.entries.forEach((e) => e.sets.forEach((s) => { if (s.rpe != null) rpes.push(s.rpe); }));
+      if (rpes.length === 0) return null;
+      return { date: log.date, avgRpe: rpes.reduce((a, b) => a + b, 0) / rpes.length };
+    }).filter(Boolean);
+    if (sessionsWithRpe.length >= 3) {
+      const lastThree = sessionsWithRpe.slice(-3);
+      const avg = lastThree.reduce((a, b) => a + b.avgRpe, 0) / lastThree.length;
+      if (avg >= 8.5) signals.push({ text: `Average RPE across your last 3 logged sessions is ${round(avg, 1)} — consistently high effort with little room before failure.` });
+    }
+    if (schedule && schedule.blockId) {
+      const block = blocks.find((b) => b.id === schedule.blockId);
+      if (block && block.weeks) {
+        const elapsedDays = daysBetween(schedule.startDate, todayISO());
+        const elapsedWeeks = Math.floor(elapsedDays / 7) + 1;
+        if (elapsedWeeks >= block.weeks && block.phase !== "Deload") {
+          signals.push({ text: `You're in week ${elapsedWeeks} of the ${block.weeks}-week "${block.name}" block — this is typically when a deload week is scheduled before the next block.` });
+        }
+      }
+    }
+    return signals;
+  }
+
+  const deloadSignals = computeDeloadSignals();
+  const isTotal = selectedTarget === "__total__";
+  const history = isTotal ? totalHistory() : (selectedTarget ? historyFor(selectedTarget) : []);
+  const lastTwo = history.slice(-2);
+  let suggestion = null;
+  if (lastTwo.length === 2) {
+    const prev = lastTwo[0];
+    const curr = lastTwo[1];
+    suggestion = curr.est1rm >= prev.est1rm
+      ? `Last session's value (${round(curr.est1rm)} lbs) held or improved on the one before. Consider adding a little weight next session.`
+      : `Last session dipped slightly vs the one before. Consider repeating the same weight before progressing.`;
+  }
+
+  const weeklyVolume = volumeByMuscle();
+  const weekKeys = Object.keys(weeklyVolume).sort();
+  const recentWeeks = weekKeys.slice(-6);
+  const allMuscles = Array.from(new Set(recentWeeks.flatMap((w) => Object.keys(weeklyVolume[w] || {}))));
+
+  const totalTonnageByDate = {};
+  logs.forEach((log) => {
+    const tonnage = log.entries.reduce((sum, entry) => sum + entry.sets.reduce((s2, s) => s2 + s.weight * s.reps, 0), 0);
+    totalTonnageByDate[log.date] = (totalTonnageByDate[log.date] || 0) + tonnage;
+  });
+  const tonnageDates = Object.keys(totalTonnageByDate).sort();
+
+  if (logs.length === 0 && bodyweightLogs.length === 0) {
+    return <p className="text-sm" style={{ color: INK_SOFT }}>Log some workouts to see progress trends here.</p>;
+  }
+
+  return (
+    <div className="space-y-6">
+      {deloadSignals.length > 0 && (
+        <PaperCard className="p-3" style={{ background: "#f3e4cc" }}>
+          <div className="flex items-center gap-2 mb-2">
+            <AlertTriangle size={15} style={{ color: "#9a6a1a" }} />
+            <p className="text-sm font-medium nb-script" style={{ color: "#7a5a10", fontSize: "1.05rem" }}>Deload may be worth considering</p>
+          </div>
+          <ul className="space-y-1.5">
+            {deloadSignals.map((s, i) => <li key={i} className="text-xs leading-relaxed" style={{ color: "#7a5a10" }}>• {s.text}</li>)}
+          </ul>
+          <p className="text-[11px] mt-2" style={{ color: "#9a7a30" }}>These are pattern-based observations from your logged data, not a substitute for how you actually feel. Use your judgment.</p>
+        </PaperCard>
+      )}
+
+      {logs.length > 0 && (
+        <div>
+          <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+            <p className="text-sm font-medium nb-header" style={{ color: INK }}>Estimated 1RM</p>
+            <select value={selectedTarget || ""} onChange={(e) => setSelectedTarget(e.target.value)} className="px-2 py-1.5 text-sm" style={inputStyle()}>
+              <option value="__total__">Total (all logged lifts)</option>
+              {trackableExercises.map((exo) => <option key={exo.id} value={exo.id}>{exo.name}</option>)}
+            </select>
+          </div>
+          {history.length === 0 && <p className="text-xs" style={{ color: INK_SOFT }}>No logged sets yet for this selection.</p>}
+          {history.length > 0 && (
+            <>
+              <div className="grid grid-cols-3 gap-2 mb-3">
+                <MetricCard label="Sessions logged" value={history.length} />
+                <MetricCard label="Best value" value={`${round(Math.max(...history.map((h) => h.est1rm)))} lbs`} />
+                <MetricCard label="Latest value" value={`${round(history[history.length - 1].est1rm)} lbs`} />
+              </div>
+              <SimpleLineChart points={history.map((h) => ({ x: fmtDate(h.date), y: h.est1rm }))} showTrend={true} height={300} />
+              {suggestion && <div className="mt-3 rounded-md p-2.5 text-xs" style={{ background: "#dce8f0", color: "#2d4a5a", border: "1px solid #b8cce0" }}>{suggestion}</div>}
+            </>
+          )}
+        </div>
+      )}
+
+      <BodyweightTracker bodyweightLogs={bodyweightLogs} setBodyweightLogs={setBodyweightLogs} shown={progressSettings.bodyweightShown} setShown={setBodyweightShown} />
+
+      {logs.length > 0 && (
+        <div>
+          <button onClick={() => setDetailShown(!progressSettings.detailShown)} className="flex items-center gap-1 text-xs px-2 py-1 nb-script" style={{ border: `1.5px solid ${INK_SOFT}`, borderRadius: 3, color: INK_SOFT }}>
+            {progressSettings.detailShown ? <ChevronDown size={13} /> : <ChevronRight size={13} />} Additional detail (tonnage &amp; muscle volume)
+          </button>
+          {progressSettings.detailShown && (
+            <div className="mt-3 space-y-6">
+              <div>
+                <p className="text-sm font-medium mb-3 nb-header" style={{ color: INK }}>Total tonnage per session</p>
+                <SimpleLineChart points={tonnageDates.map((d) => ({ x: fmtDate(d), y: round(totalTonnageByDate[d]) }))} />
+              </div>
+              <div>
+                <p className="text-sm font-medium mb-3 nb-header" style={{ color: INK }}>Weekly volume by muscle group</p>
+                {allMuscles.length === 0 ? (
+                  <p className="text-xs" style={{ color: INK_SOFT }}>Not enough data yet.</p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="text-xs w-full border-collapse">
+                      <thead>
+                        <tr>
+                          <th className="text-left font-normal pb-1" style={{ color: INK_SOFT }}>Week</th>
+                          {allMuscles.map((m) => <th key={m} className="text-right font-normal pb-1 px-2" style={{ color: INK_SOFT }}>{m}</th>)}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {recentWeeks.map((w) => (
+                          <tr key={w} style={{ borderTop: "1px solid rgba(59,47,30,0.15)" }}>
+                            <td className="py-1" style={{ color: INK }}>{w}</td>
+                            {allMuscles.map((m) => <td key={m} className="text-right py-1 px-2" style={{ color: INK }}>{weeklyVolume[w][m] ? round(weeklyVolume[w][m]).toLocaleString() : "–"}</td>)}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function BodyweightTracker({ bodyweightLogs, setBodyweightLogs, shown, setShown }) {
+  const [date, setDate] = useState(todayISO());
+  const [weight, setWeight] = useState("");
+
+  function addEntry() {
+    if (!weight || isNaN(Number(weight))) return;
+    setBodyweightLogs((prev) => {
+      const filtered = prev.filter((e) => e.date !== date);
+      return [...filtered, { date, weight: Number(weight) }].sort((a, b) => (a.date < b.date ? -1 : 1));
+    });
+    setWeight("");
+  }
+
+  function removeEntry(d) {
+    setBodyweightLogs((prev) => prev.filter((e) => e.date !== d));
+  }
+
+  const sorted = [...bodyweightLogs].sort((a, b) => (a.date < b.date ? -1 : 1));
+
+  if (!shown) {
+    return (
+      <div>
+        <button onClick={() => setShown(true)} className="text-sm px-3 py-1.5 nb-script" style={{ border: `1.5px solid ${INK}`, borderRadius: 3, color: INK }}>
+          + Track bodyweight (optional)
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-sm font-medium nb-header" style={{ color: INK }}>Bodyweight</p>
+        <button onClick={() => setShown(false)} className="text-xs px-2 py-1" style={{ border: `1.5px solid ${INK_SOFT}`, borderRadius: 3, color: INK_SOFT }}>Hide</button>
+      </div>
+      <div className="flex flex-wrap gap-2 items-end mb-3">
+        <div>
+          <label className="text-xs block mb-1" style={{ color: INK_SOFT }}>Date</label>
+          <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="px-2 py-1.5 text-sm" style={inputStyle()} />
+        </div>
+        <div>
+          <label className="text-xs block mb-1" style={{ color: INK_SOFT }}>Weight</label>
+          <input type="number" value={weight} onChange={(e) => setWeight(e.target.value)} placeholder="180" className="px-2 py-1.5 text-sm w-24" style={inputStyle()} />
+        </div>
+        <button onClick={addEntry} className="text-sm px-3 py-1.5 nb-script" style={{ background: INK, color: PAPER_BG, borderRadius: 3 }}>Log entry</button>
+      </div>
+
+      {sorted.length === 0 ? (
+        <p className="text-xs" style={{ color: INK_SOFT }}>No bodyweight entries yet.</p>
+      ) : (
+        <>
+          <BodyweightChart entries={sorted} />
+          <div className="mt-3 max-h-40 overflow-y-auto space-y-1">
+            {[...sorted].reverse().map((e) => (
+              <div key={e.date} className="flex items-center justify-between text-xs px-1">
+                <span style={{ color: INK }}>{fmtDate(e.date)} — {e.weight}</span>
+                <button onClick={() => removeEntry(e.date)} className="p-0.5" style={{ color: INK_SOFT }}><X size={12} /></button>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function BodyweightChart({ entries }) {
+  const width = 700;
+  const height = 200;
+  const padding = 36;
+  const threshold = 0.3;
+
+  const weights = entries.map((e) => e.weight);
+  const minY = Math.min(...weights) - 2;
+  const maxY = Math.max(...weights) + 2;
+  const range = maxY - minY || 1;
+  const stepX = entries.length > 1 ? (width - padding * 2) / (entries.length - 1) : 0;
+
+  function yFor(val) {
+    return height - padding - ((val - minY) / range) * (height - padding * 2);
+  }
+  function xFor(i) {
+    return padding + i * stepX;
+  }
+
+  function colorFor(idx) {
+    if (idx === 0) return INK_SOFT;
+    const diff = entries[idx].weight - entries[idx - 1].weight;
+    if (diff > threshold) return "#8a3324";
+    if (diff < -threshold) return "#2d5240";
+    return "#9a8a6a";
+  }
+
+  const coords = entries.map((e, i) => ({ x: xFor(i), y: yFor(e.weight), weight: e.weight, date: e.date }));
+
+  return (
+    <div>
+      <svg viewBox={`0 0 ${width} ${height}`} className="w-full" style={{ maxHeight: 230 }}>
+        <line x1={padding} y1={height - padding} x2={width - padding} y2={height - padding} stroke={INK_SOFT} strokeWidth="1" />
+        {coords.slice(1).map((c, i) => {
+          const prev = coords[i];
+          return <line key={i} x1={prev.x} y1={prev.y} x2={c.x} y2={c.y} stroke={colorFor(i + 1)} strokeWidth="2.5" />;
+        })}
+        {coords.map((c, i) => (
+          <g key={i}>
+            <circle cx={c.x} cy={c.y} r="4" fill={colorFor(i)} />
+            <text x={c.x} y={c.y - 8} fontSize="9" fill={INK} textAnchor="middle" fontFamily="'Kalam', cursive">{c.weight}</text>
+            {(i % Math.ceil(entries.length / 10 || 1) === 0) && (
+              <text x={c.x} y={height - padding + 14} fontSize="8.5" fill={INK_SOFT} textAnchor="middle">{fmtDate(c.date)}</text>
+            )}
+          </g>
+        ))}
+      </svg>
+      <div className="flex flex-wrap gap-3 mt-2">
+        <span className="flex items-center gap-1.5 text-xs" style={{ color: INK_SOFT }}><span style={{ width: 14, height: 2.5, background: "#8a3324", display: "inline-block" }} /> Up vs last entry</span>
+        <span className="flex items-center gap-1.5 text-xs" style={{ color: INK_SOFT }}><span style={{ width: 14, height: 2.5, background: "#2d5240", display: "inline-block" }} /> Down vs last entry</span>
+        <span className="flex items-center gap-1.5 text-xs" style={{ color: INK_SOFT }}><span style={{ width: 14, height: 2.5, background: "#9a8a6a", display: "inline-block" }} /> Roughly flat</span>
+      </div>
+    </div>
+  );
+}
+
+function MetricCard({ label, value }) {
+  return (
+    <PaperCard className="p-3">
+      <p className="text-[11px]" style={{ color: INK_SOFT }}>{label}</p>
+      <p className="text-lg font-medium mt-0.5 nb-script" style={{ color: INK }}>{value}</p>
+    </PaperCard>
+  );
+}
+
+function movingAverage(values, window) {
+  return values.map((_, i) => {
+    const start = Math.max(0, i - window + 1);
+    const slice = values.slice(start, i + 1);
+    return slice.reduce((a, b) => a + b, 0) / slice.length;
+  });
+}
+
+function SimpleLineChart({ points, showTrend = false, height = 200 }) {
+  if (points.length === 0) return <p className="text-xs" style={{ color: INK_SOFT }}>No data yet.</p>;
+  const width = 680;
+  const padding = 44;
+  const ys = points.map((p) => p.y);
+  const minY = Math.min(...ys) * 0.93;
+  const maxY = Math.max(...ys) * 1.07;
+  const range = maxY - minY || 1;
+  const stepX = points.length > 1 ? (width - padding * 2) / (points.length - 1) : 0;
+  const coords = points.map((p, i) => ({ x: padding + i * stepX, y: height - padding - ((p.y - minY) / range) * (height - padding * 2), label: p.x, value: p.y }));
+  const pathD = coords.map((c, i) => `${i === 0 ? "M" : "L"} ${c.x} ${c.y}`).join(" ");
+
+  const trendValues = showTrend && points.length >= 3 ? movingAverage(points.map((p) => p.y), 3) : null;
+  const trendCoords = trendValues
+    ? trendValues.map((v, i) => ({ x: padding + i * stepX, y: height - padding - ((v - minY) / range) * (height - padding * 2) }))
+    : null;
+  const trendPathD = trendCoords ? trendCoords.map((c, i) => `${i === 0 ? "M" : "L"} ${c.x} ${c.y}`).join(" ") : null;
+
+  const gridCount = 4;
+  const gridLines = Array.from({ length: gridCount + 1 }, (_, i) => {
+    const val = minY + (range * i) / gridCount;
+    const y = height - padding - ((val - minY) / range) * (height - padding * 2);
+    return { y, val: round(val) };
+  });
+
+  return (
+    <div>
+      <svg viewBox={`0 0 ${width} ${height}`} className="w-full" style={{ maxHeight: height + 20 }}>
+        {gridLines.map((g, i) => (
+          <g key={i}>
+            <line x1={padding} y1={g.y} x2={width - padding} y2={g.y} stroke={INK_SOFT} strokeWidth="0.5" strokeOpacity="0.3" strokeDasharray="3,3" />
+            <text x={padding - 6} y={g.y + 3} fontSize="9" fill={INK_SOFT} textAnchor="end">{g.val}</text>
+          </g>
+        ))}
+        <line x1={padding} y1={height - padding} x2={width - padding} y2={height - padding} stroke={INK_SOFT} strokeWidth="1" />
+        {trendPathD && <path d={trendPathD} fill="none" stroke={INK_SOFT} strokeWidth="2" strokeDasharray="6,4" opacity="0.8" />}
+        <path d={pathD} fill="none" stroke={ACCENT} strokeWidth="2.5" />
+        {coords.map((c, i) => <circle key={i} cx={c.x} cy={c.y} r="4" fill={ACCENT} />)}
+        {coords.map((c, i) => <text key={"lbl" + i} x={c.x} y={c.y - 10} fontSize="10" fill={INK} textAnchor="middle" fontFamily="'Kalam', cursive" fontWeight="700">{round(c.value)}</text>)}
+        {coords.map((c, i) => <text key={"xlbl" + i} x={c.x} y={height - 10} fontSize="9" fill={INK_SOFT} textAnchor="middle">{c.label}</text>)}
+      </svg>
+      {showTrend && points.length >= 3 && (
+        <div className="flex items-center gap-3 mt-1.5">
+          <span className="flex items-center gap-1.5 text-xs" style={{ color: INK_SOFT }}><span style={{ width: 14, height: 0, borderTop: `2px dashed ${INK_SOFT}`, display: "inline-block" }} /> 3-session trend</span>
+          <span className="flex items-center gap-1.5 text-xs" style={{ color: INK_SOFT }}><span style={{ width: 14, height: 2.5, background: ACCENT, display: "inline-block" }} /> Actual</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+
+</script>
+</body>
+</html>
